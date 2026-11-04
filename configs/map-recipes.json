@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "target_exe_sha256": "d8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818",
+  "artwork_origin": "User-supplied map icon sheets; distribution rights require separate clearance. No artwork pixels embedded in this metadata.",
+  "markers": [
+    {
+      "bitmap": 530,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 17,
+      "original_sha256": "cb2eaa965508cb944db2cd3889595a2e17e8d553656fe7dd72fbc116d5e3cf52",
+      "asset": "textures/map-530.xmt",
+      "sha256": "84131829f3556aaa10506aa6ab732686aeef3062552d41432274855d6814bb16",
+      "art": "new-530.png",
+      "art_sha256": "2b057dded2c37a4e683d45c87cfaa8659ff1ee475f8667e7268ee22a15ee5068",
+      "original_dimensions": [
+        32,
+        32
+      ]
+    },
+    {
+      "bitmap": 534,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 19,
+      "original_sha256": "3d1d24dec1844e3db87eb0b1afb7c64a590379bad2366771ada5e2a6771b7690",
+      "asset": "textures/map-534.xmt",
+      "sha256": "68658429ce1f77bfa7b232a8667f91dc3f2e2339d62c2c132ab5a38a9fe6600c",
+      "art": "new-534.png",
+      "art_sha256": "ef180c7986c62a25131ad582c8deee86dcd29efd1e3fc16786f9804237f883dc",
+      "original_dimensions": [
+        64,
+        64
+      ]
+    },
+    {
+      "bitmap": 536,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 18,
+      "original_sha256": "0d1df3874e83317a8373e5406fad2cfec3bfde44c16aa54776f894b04d33d26c",
+      "asset": "textures/map-536.xmt",
+      "sha256": "f14b3af324f45d316c9c31e04bc111cfc62e1a0eec345b9087410dec46b7c667",
+      "art": "new-536.png",
+      "art_sha256": "2a2643356d3f7ce368d4c52bd2ab2c515b0c0652756d3b584bc9e01673370f25",
+      "original_dimensions": [
+        64,
+        64
+      ]
+    },
+    {
+      "bitmap": 538,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 16,
+      "original_sha256": "5ecebb944604424301ccde659ce1d23e342b051c5c5822185062e951f61e6b99",
+      "asset": "textures/map-538.xmt",
+      "sha256": "207bdea150646e2db509586ef064d928b91a4c00f0e4059f77b236810c40a316",
+      "art": "new-538.png",
+      "art_sha256": "9b2f79dfc45e840b7c1c0333c0e885cc795cf086618327fcb17410bbc1eb94b1",
+      "original_dimensions": [
+        64,
+        64
+      ]
+    },
+    {
+      "bitmap": 541,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 22,
+      "original_sha256": "8b30c48f93580448504195b86a5724c02942310bdfdcc5578eb99a5d8b4ef709",
+      "asset": "textures/map-541.xmt",
+      "sha256": "0b86f44e54aff7c8b4c5da16a48187118b97e28ad9cffc45c61c14173d61d0c6",
+      "art": "new-541.png",
+      "art_sha256": "686b2f600f707271a5b8587257867d71c8c973be0af253e3858356aa4bed1567",
+      "original_dimensions": [
+        64,
+        64
+      ]
+    },
+    {
+      "bitmap": 545,
+      "archive": "c",
+      "bank_index": 140,
+      "storage_index": 23,
+      "original_sha256": "0a00e77e27b1aa8b2371ab27d7838eb3824421c292808aef8d1d5edc33ae6deb",
+      "asset": "textures/map-545.xmt",
+      "sha256": "cf98f7b87d0c0d5bf1b234c0515197aea2681874ed26fbba52f92fed595b4f0f",
+      "art": "new-545.png",
+      "art_sha256": "019df340d451282d02aefb94f83bf9c452c22657ac148a68470af138f89f42f8",
+      "original_dimensions": [
+        64,
+        64
+      ]
+    }
+  ]
+}

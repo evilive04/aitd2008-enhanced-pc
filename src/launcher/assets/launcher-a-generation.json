@@ -1,0 +1,20 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "mode": "edit",
+  "transparentBackground": true,
+  "reference": "src/launcher/assets/logo.png",
+  "selectedOutput": "src/launcher/assets/launcher-a-source.png",
+  "icon": "src/launcher/assets/launcher.ico",
+  "sizes": [
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    128,
+    256
+  ],
+  "prompt": "Edit this existing transparent Alone in the Dark logo into a Windows launcher monogram. Keep ONLY its very first leftmost tall stylized letter A from ALONE, preserving its original distinctive tall narrow antique letter shape, gold/orange edging and grey inset. Remove EVERY other letter and word completely, especially the adjacent L. Do not use the A in DARK. Do not add embellishments, a background, glow, frame, symbols, or any other characters. Full entire A must be visible with no cropped strokes. Place the complete single A centered on a square genuinely transparent canvas, preserving the letter's aspect ratio, with generous clear transparent margins (at least 10 percent top/bottom and ample sides). Clean crisp silhouette suitable for an app icon; faithful to the existing logo design."
+}

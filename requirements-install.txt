@@ -1,0 +1,3 @@
+# Local asset preparation; use 64-bit Python 3.12 or newer.
+Pillow==13.0.0
+numpy==2.5.4

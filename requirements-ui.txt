@@ -1,0 +1,2 @@
+# Tested local generation dependency; no game assets are redistributed.
+Pillow==13.0.0

@@ -1,0 +1,27 @@
+LIBRARY d3d9
+EXPORTS
+    AITDPlayUiSound=_AITDPlayUiSound@4 PRIVATE
+    Ordinal16=Forward0 @16 NONAME
+    Ordinal17=Forward1 @17 NONAME
+    Ordinal18=Forward2 @18 NONAME
+    Ordinal19=Forward3 @19 NONAME
+    Direct3DCreate9On12=Forward4 @20
+    Direct3DCreate9On12Ex=Forward5 @21
+    Ordinal22=Forward6 @22 NONAME
+    Ordinal23=Forward7 @23 NONAME
+    Direct3DShaderValidatorCreate9=Forward8 @24
+    PSGPError=Forward9 @25
+    PSGPSampleTexture=Forward10 @26
+    D3DPERF_BeginEvent=Forward11 @27
+    D3DPERF_EndEvent=Forward12 @28
+    D3DPERF_GetStatus=Forward13 @29
+    D3DPERF_QueryRepeatFrame=Forward14 @30
+    D3DPERF_SetMarker=Forward15 @31
+    D3DPERF_SetOptions=Forward16 @32
+    D3DPERF_SetRegion=Forward17 @33
+    DebugSetLevel=Forward18 @34
+    DebugSetMute=Forward19 @35
+    Direct3D9EnableMaximizedWindowedModeShim=Forward20 @36
+    Direct3DCreate9=_ProxyCreate9@4 @37
+    Direct3DCreate9Ex=Forward22 @38
+
