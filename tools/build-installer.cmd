@@ -14,7 +14,7 @@ if not exist "%setupCompiler%" (
  popd
  exit /b 1
 )
-"%setupCompiler%" /nologo /target:winexe /platform:anycpu /optimize+ /warn:4 /warnaserror+ /codepage:65001 /out:"build\installer\AITD Enhanced Setup.exe" /win32manifest:src\launcher\launcher.manifest /win32icon:src\launcher\assets\launcher.ico /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll src\installer\Setup.cs
+"%setupCompiler%" /nologo /target:winexe /platform:anycpu /optimize+ /warn:4 /warnaserror+ /codepage:65001 /out:"build\installer\AITD Enhanced Setup.exe" /win32manifest:src\launcher\launcher.manifest /win32icon:src\launcher\assets\launcher.ico /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll src\installer\Setup.cs src\installer\Dependencies.cs
 set "setupResult=%errorlevel%"
 popd
 exit /b %setupResult%

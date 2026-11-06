@@ -1,33 +1,32 @@
-# Enhanced PC Edition — preview installation
+# Enhanced PC Edition — installation
 
-Version **0.1.0-rc1** is a compatibility preview awaiting user gameplay checks.
-The installer integration prepared 91 mod files; six override packs with 63
-replacements compiled successfully. A controlled original-Steam startup opened
-the compiled A/C archive overrides and ran near 117 FPS. Full gameplay, all
-interface layouts and parity with the private development build have not been
-established. Read `RELEASE_STATUS.md` for the evidence and limits. This document
-describes the packaged preview workflow. Download the runtime ZIP from the
-[preview release](https://github.com/evilive04/aitd2008-enhanced-pc/releases/tag/v0.1.0-rc1),
-not GitHub's automatically generated source-code archives.
+1. Extract the runtime ZIP and run **Setup.exe**.
+2. Select your original, activated Steam game folder.
+3. Click **Install mod** and approve missing requirements if needed.
+4. Use **AITD Enhanced Launcher.exe** in the game folder to play.
 
-On 2026-11-03 the owner explicitly approved project distribution of
-`map_icons_alpha.png` and `map_circular_noise_alpha.png`, including their six
-derived icon sheets. They are outside the MIT source license and regular Git
-history. The source contains only recipe metadata and hashes; the approved
-PNGs are separate Release build inputs. See `ASSET_RIGHTS.md`.
+Version **0.1.0-rc2** is a preview. Complete gameplay acceptance remains pending.
+The requirements, removal instructions and developer details are below.
 
-## Requirements
+## Manual requirements
 
 - Windows and your own working, normally activated Steam installation of
   Alone in the Dark (2008).
 - The supported original `Alone.exe`: SHA-256
   `d8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818`.
-- 64-bit Python 3.12 or newer, Pillow 13.0.0 and NumPy 2.5.4. Install these
-  dependencies into the Python environment selected in Setup:
+- [64-bit Python 3.12+](https://www.python.org/downloads/windows/),
+  [Pillow 13.0.0](https://pypi.org/project/Pillow/13.0.0/) and
+  [NumPy 2.5.4](https://pypi.org/project/numpy/2.5.4/).
+  You may approve automatic setup instead. For manual/offline use, install
+  the packages in the Python environment selected in Setup:
 
   ```text
-  python -m pip install -r requirements-install.txt
+  python -m venv aitd-setup-env
+  aitd-setup-env\Scripts\python.exe -m pip install -r requirements-install.txt
   ```
+
+  Select `aitd-setup-env\Scripts\python.exe` in Setup and keep that environment
+  while using the mod. This avoids changing packages in your normal Python.
 
 Keep a normal backup of your game and saves. Close the game before installing.
 Use a clean installation: Setup refuses to overwrite existing mod files.
@@ -43,7 +42,8 @@ Windows 260-character limit are rejected.
    `PAYLOAD_MANIFEST.json`, `tools`, `release`, `configs`, `assets` and `payload`
    together.
 2. Start `Setup.exe`, choose the game folder containing the original
-   `Alone.exe`, and select your installed 64-bit Python interpreter.
+   `Alone.exe`, and optionally select your installed 64-bit Python interpreter.
+   Leave Python empty to let Setup offer to install it.
 3. Choose **Install mod**. The installer reads the original archives to prepare
    the interface and texture changes locally. It also checks the exact original
    resources and approved generated outputs. Do not upload these locally
@@ -51,7 +51,20 @@ Windows 260-character limit are rejected.
 4. When installation finishes, open **`AITD Enhanced Launcher.exe` in the game
    folder** to choose your settings and start the game.
 
-The setup program does not download dependencies. Unsupported original game
+If requirements are missing, Setup asks before downloading them. Declining
+stops this step without downloads; use the Manual downloads button instead.
+Python 3.14.10 x64 comes directly from python.org and must have a trusted Python
+Software Foundation signature before execution. It is installed for the current
+Windows user without changing PATH. Pillow and NumPy are installed from PyPI
+as prebuilt wheels in a new isolated environment under
+`%LOCALAPPDATA%/AITD2008Enhanced/setup/environments`; your existing packages are
+not upgraded or replaced. Keep this environment while using the mod: the
+installed resource compiler records its interpreter path. Downloads need an
+Internet connection and disk space. Failed downloads can be retried; no game
+files are copied until requirements pass. Downloaded Python installers are
+retained under the adjacent `downloads` folder and may be removed afterward.
+
+ Unsupported original game
 files, missing dependencies or an unsupported Windows UI font cause an explicit
 failure rather than silently substituting different artwork. The tutorial-keycap
 recipe currently requires the exact supported Segoe UI Bold font version.

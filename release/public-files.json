@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc1",
+  "version": "0.1.0-rc2",
   "status": "compatibility-in-progress",
   "scope": "Curated source candidate. Runtime preview is awaiting final user gameplay checks; no original game files are included. Owner-supplied map artwork distribution was approved on 2026-11-03.",
   "files": [
@@ -43,6 +43,7 @@
     "src/input/camera_controls.inl",
     "src/input/dinput8.def",
     "src/input/input_proxy.cpp",
+    "src/installer/Dependencies.cs",
     "src/installer/Setup.cs",
     "src/launcher/LauncherModel.cs",
     "src/launcher/LauncherPages.cs",

@@ -1,3 +1,38 @@
+# Setup revision 0.1.0-rc2
+
+This revision changes Setup and player documentation. The game DLLs and launcher
+are unchanged from rc1. Setup now requests consent for official dependency
+downloads, creates isolated package environments and uses an automatic layout
+instead of fixed-height controls. Complete gameplay acceptance remains outstanding.
+
+<details>
+<summary>Setup revision checks and limits (rc2)</summary>
+
+The production Setup built with warnings treated as errors. Environment parsing
+and six real Windows argument round trips passed. The production downloader
+retrieved the official Python 3.14.10 x64 installer and accepted its trusted PSF
+signature; unsigned data and a valid signature from another publisher were
+rejected. Actual pinned Pillow/NumPy wheels installed and imported in an isolated
+QA environment, with the base interpreter's recorded package presence unchanged.
+
+A native WinForms harness instantiated the actual form and checked control
+bounds and preferred text sizes with proportional geometry and fonts at 1x,
+1.5x and 2x, including the additional post-install button. This is measured
+layout evidence, not separate sessions at changed Windows DPI settings.
+
+The consent-refusal automation timed out twice. Actual interactive No behavior
+and runtime network inactivity on that path remain unverified. Source inspection
+confirms that No exits before downloader/pip calls. The full affirmative GUI
+flow and execution of the real Python installer on a clean Windows profile were
+not tested; no Python installer was run into the user's profile and no game
+session was launched for this revision. The earlier rc1 backend integration
+results below do not prove this new complete UI workflow.
+
+</details>
+
+<details>
+<summary>Baseline technical checks and known limits (rc1)</summary>
+
 # Release status
 
 **Source status: compatibility-in-progress.** The curated source is buildable.
@@ -100,3 +135,5 @@ LAA change. Its ordinary 2 GiB address-space limit is retained. The bounded menu
 probe is not evidence of memory stability throughout the story at high graphics
 settings; longer gameplay and memory pressure remain unverified.
 
+
+</details>

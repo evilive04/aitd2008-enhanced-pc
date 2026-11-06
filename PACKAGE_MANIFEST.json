@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc1",
+  "version": "0.1.0-rc2",
   "status": "compatibility-in-progress",
   "scope": "Curated source candidate. Runtime preview is awaiting final user gameplay checks; no original game files are included. Owner-supplied map artwork distribution was approved on 2026-11-03.",
   "source_only": true,
@@ -21,20 +21,20 @@
       "bytes": 1395
     },
     "README-INSTALL.md": {
-      "sha256": "c8dcb874e84107606d21c92d97fa3f849c457439d7687b8cfff884b512953c6e",
-      "bytes": 7004
+      "sha256": "088b59873c7c861d455a1ddaaad8aee68532c85c9557cb5149d0fafcd4344a39",
+      "bytes": 7672
     },
     "README.md": {
-      "sha256": "0443110fa70d4e8b271bb46d7375b8f5c568c96496449860a1dd18f2afc9fa7f",
-      "bytes": 6022
+      "sha256": "55236f3989453bd32a912f54c48e08d8e6e413d208cfb2e0a8549ef580c38f87",
+      "bytes": 3413
     },
     "RELEASE_STATUS.md": {
-      "sha256": "6e38a2d5be9ac413445e120c36405cfd2f2f4f26467e9b5766eb824ccbeb23cb",
-      "bytes": 6538
+      "sha256": "16fa5ec84632481abaac1d37633c88b5b1ede88ea68b381f35fdaba72054c1eb",
+      "bytes": 8398
     },
     "THIRD_PARTY_NOTICES.md": {
-      "sha256": "54ffb2d2afbbd6f87b097d59915eb51e48e4373a4a778783d8c9dd6c129b8de3",
-      "bytes": 3753
+      "sha256": "8f00e4da151ef210c797604c172aa21bbcec652f29b2075fc62c45901e19216f",
+      "bytes": 4345
     },
     "assets/ui/PROVENANCE.md": {
       "sha256": "9d5862cbf9b5722eaae01ac52ef5c69bf6af2669687e7f498d43a15020a16845",
@@ -81,11 +81,11 @@
       "bytes": 44204
     },
     "release/public-files.json": {
-      "sha256": "e35e5c1cf4835645a24c8cf8074248d2ec3c3ce0a5b429fa0789b44ef6ebdc40",
-      "bytes": 17642
+      "sha256": "08a6250a7247cf12739a1ed9141ac64d59fff32443616a5467dfa79de1d4d6ff",
+      "bytes": 17680
     },
     "release/runtime-files.json": {
-      "sha256": "6df749914a2b276daaf559f77929468b0a227b0d2be64d6a0ec096f9cb898e6b",
+      "sha256": "9c25ce84fe3194252818ffd17a52f8ff29a8f28f92c47eeb80a24563fc0d3720",
       "bytes": 4553
     },
     "release/semantic-ui-recipes/README.md": {
@@ -160,9 +160,13 @@
       "sha256": "eb0bf87bd769e0fbb88ad091874698e2b79f2ab3d9edf55fd818f412108e6366",
       "bytes": 20951
     },
+    "src/installer/Dependencies.cs": {
+      "sha256": "9e5274bd97806e65376f76f3a03c94dac4a088a453cb6bc49c442c07b250d398",
+      "bytes": 5097
+    },
     "src/installer/Setup.cs": {
-      "sha256": "e4c4084991faf2c6132e4d2715b91eff09f883029f3dbf19ae3739cef0f4a330",
-      "bytes": 20469
+      "sha256": "eeb68d7f18b3e9c1d785e90cea34c40a3938e19bbe74435d0dae6bde939c7839",
+      "bytes": 25684
     },
     "src/launcher/LauncherModel.cs": {
       "sha256": "027f26eac0382d992965f3239eeab571d9f79f102aeb067f7bf5e61ff79cbf57",
@@ -1501,8 +1505,8 @@
       "bytes": 1516
     },
     "tools/build-installer.cmd": {
-      "sha256": "e9d7ff97516572f258ca5839514341bfc84f4dda6a60cb162946e0f8ab82796b",
-      "bytes": 972
+      "sha256": "fa55b972d5c0c0c63379249092af0f57840e53e689a2c5aace34f826eb0c9a98",
+      "bytes": 1002
     },
     "tools/build-launcher-icon.ps1": {
       "sha256": "eb37441bc5a1183bbcf200b82a87acf9fafcbad3341a8e04639dd7aea1da8a70",
@@ -1585,7 +1589,7 @@
       "bytes": 13919
     },
     "tools/package_runtime_release.py": {
-      "sha256": "f31dd609a001052a8b08976a409f5196d5e0cc3271b24110160f7d63771e4570",
+      "sha256": "c7d2ad22a5c0a92fba47471debc86f8bcb250703043cdabc40393077f9b9750c",
       "bytes": 21412
     },
     "tools/semantic_ui_codec.py": {

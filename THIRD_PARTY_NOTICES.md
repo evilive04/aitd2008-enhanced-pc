@@ -61,3 +61,14 @@ OpenAI Codex/ChatGPT agents assisted code development, including GPT-6.1 Sol and
 Terra during technical QA. Project slate/root artwork and some graphical
 materials were generated using OpenAI ImageGen. Model-generated output, provider
 labels and owner declarations do not by themselves certify third-party rights.
+
+## Optional dependency downloads
+
+Setup offers downloads only after user consent. Python is obtained directly
+from python.org under the PSF license; Pillow and NumPy are obtained from PyPI
+under their own licenses, which remain in their installed distributions. These
+downloads are not relicensed under this project's MIT license.
+
+- Python: https://docs.python.org/3/license.html
+- Pillow (MIT-CMU): https://pillow.readthedocs.io/en/stable/about.html#license
+- NumPy (BSD): https://numpy.org/doc/stable/license.html
