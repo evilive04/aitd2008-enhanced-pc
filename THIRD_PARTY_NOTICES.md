@@ -72,3 +72,11 @@ downloads are not relicensed under this project's MIT license.
 - Python: https://docs.python.org/3/license.html
 - Pillow (MIT-CMU): https://pillow.readthedocs.io/en/stable/about.html#license
 - NumPy (BSD): https://numpy.org/doc/stable/license.html
+
+## Portable keycap lettering
+
+Noto Sans Bold: Copyright 2018 The Noto Project Authors
+(github.com/googlei18n/noto-fonts), SIL Open Font License 1.1.
+The pre-rendered project keycap image is supplied with that notice at
+assets/ui/keycaps-OFL.txt; provenance is adjacent. Windows font files and
+Segoe bitmap-font data are not redistributed.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc3",
+  "version": "0.1.0-rc4",
   "status": "preview-awaiting-user-gameplay",
   "target_exe_sha256": "d8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818",
   "source_files": {
@@ -56,7 +56,10 @@
     "payload/assets/ui/PROVENANCE.md": "assets/ui/PROVENANCE.md",
     "tools/generate_map_mods.py": "tools/generate_map_mods.py",
     "configs/map-recipes.json": "configs/map-recipes.json",
-    "configs/required-game-files.json": "configs/required-game-files.json"
+    "configs/required-game-files.json": "configs/required-game-files.json",
+    "assets/ui/keycaps-template.png": "assets/ui/keycaps-template.png",
+    "assets/ui/keycaps-OFL.txt": "assets/ui/keycaps-OFL.txt",
+    "assets/ui/keycaps-provenance.json": "assets/ui/keycaps-provenance.json"
   },
   "build_files": {
     "payload/d3d9.dll": "build/performance/d3d9.dll",

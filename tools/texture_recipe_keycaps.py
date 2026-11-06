@@ -2,7 +2,7 @@
 import io
 import struct
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageOps
 from inspect_scene_ui import Xmbf
 
 def native_bc3(image):
@@ -67,7 +67,7 @@ def encode_replacement(raw,image,mask=None):
     return raw[:4096]+payload
 
 
-def build(config, sources, font_path, native_mouse_images):
+def build(config, sources, template, native_mouse_images):
     """Return the same four resource replacements as the authored private pack."""
     output = {}
     for slot in (71, 73, 75):
@@ -79,23 +79,9 @@ def build(config, sources, font_path, native_mouse_images):
         original = Image.frombytes('RGBA', (w, h), raw[4096:], 'bcn', (3,))
         artwork, mask = (mouse_art(), None) if slot == 75 else panel_material(original, slot)
         output[slot] = encode_replacement(raw, artwork, mask)
-    atlas = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0)); draw = ImageDraw.Draw(atlas)
-    for name, x, y, width in config['layout']:
-        draw.rounded_rectangle((x+3,y+5,x+width-3,y+62),radius=9,fill=(5,6,5,180))
-        draw.rounded_rectangle((x+3,y+2,x+width-3,y+59),radius=9,fill=(24,25,23,255),outline=(211,202,175,255),width=2)
-        draw.line((x+14,y+5,x+width-14,y+5),fill=(242,230,201,130),width=1)
-        label={'LSHIFT':'L SHIFT','RSHIFT':'R SHIFT','LCTRL':'L CTRL','RCTRL':'R CTRL','LALT':'L ALT','RALT':'R ALT','PAGEUP':'PAGE UP','PAGEDOWN':'PAGE DOWN','CAPSLOCK':'CAPS LOCK','SEMICOLON':';'}.get(name,name)
-        if name in ('UP','DOWN','LEFT','RIGHT'):
-            shapes={'UP':[(32,17),(18,34),(27,34),(27,47),(37,47),(37,34),(46,34)],
-                    'DOWN':[(32,47),(18,30),(27,30),(27,17),(37,17),(37,30),(46,30)],
-                    'LEFT':[(17,32),(34,18),(34,27),(47,27),(47,37),(34,37),(34,46)],
-                    'RIGHT':[(47,32),(30,18),(30,27),(17,27),(17,37),(30,37),(30,46)]}
-            draw.polygon([(x+a,y+b) for a,b in shapes[name]],fill=(242,230,201,255))
-        else:
-            size=35 if len(label)<=2 else 28; font=ImageFont.truetype(str(font_path),size)
-            while draw.textbbox((0,0),label,font=font)[2]>width-22:
-                size-=1; font=ImageFont.truetype(str(font_path),size)
-            draw.text((x+width/2,y+30),label,font=font,anchor='mm',fill=(242,230,201,255),stroke_width=0)
+    if template.size != (1024, 1024) or template.mode != 'RGBA':
+        raise ValueError('Unsupported keycap template')
+    atlas = template.copy()
     old_texture=output[75]; encoded=bytearray(native_bc3(atlas)); old_blocks=old_texture[4096:]
     for row in range(16):
         encoded[row*4096:row*4096+256]=old_blocks[row*256:(row+1)*256]

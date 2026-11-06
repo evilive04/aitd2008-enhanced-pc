@@ -76,3 +76,17 @@ original content is read from the local original resources. Correct hashes,
 clean file selection and successful tests are not independent rights clearance.
 No document here guarantees immunity from copyright, trademark, contract or
 other third-party claims.
+
+## Portable tutorial-keycap graphics (rc4)
+
+`assets/ui/keycaps-template.png` is independently drawn project button artwork
+using Noto Sans Bold glyphs. It contains no native game pixels, original mouse
+art, Windows font file or Segoe bitmap glyphs. Layout and framing follow the
+existing project recipe. Native mouse cells are still derived locally from
+the player's game, outside this PNG.
+
+The template is distributed with the SIL Open Font License 1.1 notice at
+`assets/ui/keycaps-OFL.txt`, outside the project's MIT code grant. Provenance,
+source-font URL/hash and image hash are in `assets/ui/keycaps-provenance.json`.
+The font file itself is not included. Source: notofonts/noto-fonts,
+`hinted/ttf/NotoSans/NotoSans-Bold.ttf`; copyright The Noto Project Authors.

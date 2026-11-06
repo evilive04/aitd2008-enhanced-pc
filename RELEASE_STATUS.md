@@ -1,3 +1,34 @@
+# Portable keycap correction — 0.1.0-rc4
+
+The affected-computer log now confirms the prior install failure: its installed
+Segoe UI Bold SHA256 differed from the recipe's pinned Windows-font edition.
+Python, Pillow and NumPy had passed their checks. This revision removes that
+machine-specific prerequisite rather than replacing any Windows font.
+
+Tutorial keys now use the included reviewed RGBA template with OFL Noto Sans
+Bold lettering. Button layout/framing and native mouse cells are preserved.
+Only the keycap-atlas resource's expected output hash changes; original-game
+resource checks and other generated resources stay strict. No game pixels or
+Windows fonts are included in the template. All four compiled components,
+including Setup/uninstaller, are unchanged from rc3.
+
+Technical verification passed: the actual complete generator produced all 49
+expected resources in four packs while ImageFont.truetype was replaced with a
+raising guard and WINDIR pointed to an absent directory. No font access occurred.
+The new atlas matched the independently prepared local-only reference exactly;
+all three original mouse regions retained their BC3 bytes. Other recipe hashes
+matched. All 74 key cells had visible label pixels within their layout bounds.
+Missing/corrupt templates were rejected; Python AST and JSON validation passed.
+Original EXE and six archive-file metadata snapshots remained unchanged.
+
+This is real generation evidence, not a complete installation on the affected
+PC, gameplay or subjective artistic approval. Noto lettering is similar to,
+but not byte-identical with, the former Segoe version. Actual full installation
+and in-game appearance remain user verification tasks.
+
+<details>
+<summary>Earlier installer/uninstaller verification (rc3)</summary>
+
 # Installer revision 0.1.0-rc3
 
 This revision adds uninstall mod.exe and explicitly forwards generator stderr
@@ -181,6 +212,8 @@ LAA change. Its ordinary 2 GiB address-space limit is retained. The bounded menu
 probe is not evidence of memory stability throughout the story at high graphics
 settings; longer gameplay and memory pressure remain unverified.
 
+
+</details>
 
 </details>
 

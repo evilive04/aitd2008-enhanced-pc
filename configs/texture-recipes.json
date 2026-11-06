@@ -1314,7 +1314,7 @@
         "storage_index": 75,
         "original_sha256": "4ec9382dd74bfcc0112f2413e3eae41018d7c1aa564d5e92ab558d110b28389d",
         "asset": "ui/mouse-left-keycap.xmt",
-        "sha256": "f921e1b64bb7fa38ebabe87cbabe39f61b0621b5db0f52d1b85566cb8c53eea9"
+        "sha256": "426d48b9ee84671df53ae798457bd3ebafbc09ae289d051ca1fa760f7cba371e"
       },
       {
         "archive": "a",
@@ -1772,8 +1772,6 @@
       ]
     ],
     "atlas_name": "ccd33a998790fce0",
-    "font_filename": "segoeuib.ttf",
-    "font_sha256": "b169e636719880976a97e94e3b1cb3dbe5f4a38eabc037bf9f2a9165154c3ad2",
     "tips": {
       "archive": "a",
       "bank_index": 367,
@@ -1791,6 +1789,8 @@
       "bank_index": 397,
       "storage_index": 2583,
       "original_sha256": "7ee826f3ca8f268ee542965af10d6d9a090ea20fe747acf0dee8a043bcac213b"
-    }
+    },
+    "template": "assets/ui/keycaps-template.png",
+    "template_sha256": "1fa7a300350fb2db8a37d44bb02efd2f618bdb21b8bb57bb31571837fa762878"
   }
 }

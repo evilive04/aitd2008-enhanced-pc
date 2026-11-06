@@ -167,8 +167,8 @@ def prepare(game: Path, distribution: Path, stage: Path) -> dict[str, Path]:
             raise ValueError('Existing file would be replaced. Use a clean game installation: ' + name)
     tools = Path(__file__).resolve().parent
     # Report this machine-specific prerequisite before lengthy resource generation.
-    from generate_texture_mods import check_keycap_font
-    check_keycap_font(distribution)
+    from generate_texture_mods import load_keycap_template
+    load_keycap_template(distribution)
     # Every generator receives the original read-only installation and a NEW
     # destination outside it. No original-content staging tree is distributed.
     jobs = [('extract_runtime_ui.py', 'native'), ('generate_texture_mods.py', 'textures'),

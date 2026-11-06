@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc3",
+  "version": "0.1.0-rc4",
   "status": "compatibility-in-progress",
   "scope": "Curated source candidate. Runtime preview is awaiting final user gameplay checks; no original game files are included. Owner-supplied map artwork distribution was approved on 2026-11-03.",
   "source_only": true,
@@ -13,28 +13,28 @@
       "bytes": 227
     },
     "ASSET_RIGHTS.md": {
-      "sha256": "45211894f8d91c2aae079bcdf62d29cb86d71e77bba3ef055084630ac7f4569b",
-      "bytes": 4394
+      "sha256": "4baf2702ffb9dc15b035e49ca5c4dfd3175c09614e19491ca1e72278103c90a4",
+      "bytes": 5256
     },
     "LICENSE": {
       "sha256": "101ec8feedb6dab92973d8daefb6b2ae1ceb6743fa6f3af75579960d8c520a9d",
       "bytes": 1395
     },
     "README-INSTALL.md": {
-      "sha256": "78e302537174b94a5a1cd22aa4073606119458e2abcead06012aa2c4204f1dd0",
-      "bytes": 8556
+      "sha256": "cf4f449d3f46c9823cd7c3c669215245302619ba5da4864239c27640e402d32c",
+      "bytes": 8627
     },
     "README.md": {
-      "sha256": "fff16855bcc926b53d8b3c112b2d78e16ce09b41bdfac0c29a6f89b6d94179e9",
-      "bytes": 3571
+      "sha256": "9494d1a6c0381840087661485568d949744f575d189bf93045f5fd523742651a",
+      "bytes": 3604
     },
     "RELEASE_STATUS.md": {
-      "sha256": "f02de4416b0ca17f33c3fddd611115a41ef3fdaa798b94a904cb7a21f2d13fe3",
-      "bytes": 10899
+      "sha256": "8f1b3cf8c6f3503186aa4341760f12e64811d836edaa8bd81d5607f0adad94c9",
+      "bytes": 12727
     },
     "THIRD_PARTY_NOTICES.md": {
-      "sha256": "8f00e4da151ef210c797604c172aa21bbcec652f29b2075fc62c45901e19216f",
-      "bytes": 4345
+      "sha256": "9cfbd836add6ad3c5ca6cfd6108148f47d2f64d4be0ed72c42ffea7f5e989ebb",
+      "bytes": 4693
     },
     "assets/ui/PROVENANCE.md": {
       "sha256": "9d5862cbf9b5722eaae01ac52ef5c69bf6af2669687e7f498d43a15020a16845",
@@ -55,6 +55,18 @@
     "assets/ui/episode_cards.png": {
       "sha256": "bb3a595a97b5c7fc9ddcdee9bc72eec79b2337c0b495d4b04396fd5f491c929f",
       "bytes": 807074
+    },
+    "assets/ui/keycaps-OFL.txt": {
+      "sha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
+      "bytes": 4377
+    },
+    "assets/ui/keycaps-provenance.json": {
+      "sha256": "e09069afc73c360a3d335df31fe7629071f07eb9cc71a7bd9054bdab012a2156",
+      "bytes": 517
+    },
+    "assets/ui/keycaps-template.png": {
+      "sha256": "1fa7a300350fb2db8a37d44bb02efd2f618bdb21b8bb57bb31571837fa762878",
+      "bytes": 52460
     },
     "assets/ui/roots-corner.png": {
       "sha256": "2ed2f05d262a3edc633071f049d65c77bee2f2cdbbaa9a3fbc37989149a422f9",
@@ -77,16 +89,16 @@
       "bytes": 4686
     },
     "configs/texture-recipes.json": {
-      "sha256": "ba041b0b9fa4dcc045f00b4cd05aeceb30522a6c75913afadcd591603fd3fe52",
-      "bytes": 44204
+      "sha256": "4197fb73a9ae663de73e6730621cdae13b53b45f2c3f88cbb520c4f68ef954a6",
+      "bytes": 44221
     },
     "release/public-files.json": {
-      "sha256": "8060a1c88aed6cf5563788a8376b7206309167418ad5bd6fa9605d824709c39e",
-      "bytes": 17715
+      "sha256": "abb9adb017a0975a518abcbeceb97f5f7b94746a2e04332c0d169b7b216b94b2",
+      "bytes": 17830
     },
     "release/runtime-files.json": {
-      "sha256": "a64ba62b22c5fe64e3071d0f9dbd2c6a1014cc04a4591bb711690530eb29ccdc",
-      "bytes": 4630
+      "sha256": "c80a43336dea73700bb2abddbdfc2d09c0c97d6fd7f0ab1387b0b17506d80682",
+      "bytes": 4845
     },
     "release/semantic-ui-recipes/README.md": {
       "sha256": "e59d20624a69c977db06bcdb165d96b5b00b6a322b1a37e78f81e025f8bb9433",
@@ -1557,8 +1569,8 @@
       "bytes": 7120
     },
     "tools/generate_texture_mods.py": {
-      "sha256": "094d57cd2fa651d18cc188f4ae99f1fd0f6b9fd9ca599beff3e0e4d9f5b85d39",
-      "bytes": 12156
+      "sha256": "fc63ee9bb07a2acd4dd176220d6fca01d1beb27958581f3423474ad4eba18b9d",
+      "bytes": 12047
     },
     "tools/generate_ui_mods.py": {
       "sha256": "0f13cac9c1e32ee03361401521a1b24ed9938bb79ce5ff4ad84859219e0d5ea9",
@@ -1581,8 +1593,8 @@
       "bytes": 4355
     },
     "tools/install_mod.py": {
-      "sha256": "b63cd744fbc58c4697bf7d9fbf138a3c3abec4585111402bb419d43d77c31deb",
-      "bytes": 14943
+      "sha256": "54dc95034acb4b3bd197d568b34b80d4aa44aa5e1fc1e5fc862ee006013da169",
+      "bytes": 14949
     },
     "tools/lzo1x_block.py": {
       "sha256": "1cc1e1791520a4eaaee1a4fe135f3332fe49dd568d57ed1b611d309ccf3b7714",
@@ -1593,8 +1605,8 @@
       "bytes": 13919
     },
     "tools/package_runtime_release.py": {
-      "sha256": "caa2e7430f602032fb0586b7f8a7985f60ba0b38e4fce02c1b9f003095682d93",
-      "bytes": 21657
+      "sha256": "9b03ac592b29401b05ebbecb3bd66bfaade34fd6ef4fbec5d165670c28a91ef8",
+      "bytes": 21985
     },
     "tools/semantic_ui_codec.py": {
       "sha256": "6154b533548ed64f4bd5be01e8e2ad1c19065966d0f5bfda0d93f4fa74786b1b",
@@ -1605,8 +1617,8 @@
       "bytes": 5060
     },
     "tools/texture_recipe_keycaps.py": {
-      "sha256": "474d92e0dbb71d6fb5d4824eea7ea4b916bc824abf2fd6e4a371e9a1a67b267c",
-      "bytes": 7832
+      "sha256": "802d9b42937059e328d8be370d22fb8c249f41fe61a18f307f08775e7530a4dd",
+      "bytes": 6501
     },
     "tools/texture_recipe_lens.py": {
       "sha256": "480ac96cb15f93dafc1c2e405888ee77fdeb3345b0964620b259f3b8163d7af2",

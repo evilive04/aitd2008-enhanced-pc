@@ -101,30 +101,29 @@ class Output:
         self.packs.append(PACKS[name])
 
 
-def check_keycap_font(source_root, font=None):
-    config_path = plain_path(Path(source_root) / 'configs/texture-recipes.json')
+def load_keycap_template(source_root):
+    """Use reviewed project graphics, never a player's installed font version."""
+    from PIL import Image
+    root = Path(source_root)
+    config_path = plain_path(root / 'configs/texture-recipes.json')
     if config_path.stat().st_size > 1024 * 1024:
         raise ValueError('Recipe metadata exceeds limit')
     config = json.loads(config_path.read_text(encoding='utf-8'))
     if config.get('schema') != 1 or config.get('target_exe_sha256') != STOCK_EXE_SHA256:
         raise ValueError('Unsupported texture recipe metadata')
-    expected = config['keycaps']['font_sha256']
-    candidate = font or Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts' / config['keycaps']['font_filename']
-    try:
-        candidate = plain_path(candidate)
-        if candidate.stat().st_size > 32 * 1024 * 1024:
-            raise ValueError('Installed font exceeds size bounds')
-        actual = file_sha(candidate)
-    except OSError as error:
-        raise ValueError('SETUP_FONT_UNAVAILABLE: Cannot read the Windows UI font at ' +
-                         str(candidate) + '. ' + str(error)) from None
-    if actual != expected:
-        raise ValueError('SETUP_FONT_VERSION_MISMATCH: This Windows Segoe UI Bold edition is not yet supported by the keycap recipe.\n' +
-                         'Font: ' + str(candidate) + '\nExpected SHA256: ' + expected +
-                         '\nInstalled SHA256: ' + actual +
-                         '\nPlease send this log. Do not replace Windows fonts or modify the expected hash.')
-    print('Windows keycap font confirmed.', flush=True)
-    return candidate
+    record = config['keycaps']
+    if record.get('template') != 'assets/ui/keycaps-template.png':
+        raise ValueError('Unsupported keycap template path')
+    template_path = plain_path(root / record['template'])
+    if template_path.stat().st_size > 1024 * 1024 or file_sha(template_path) != record['template_sha256']:
+        raise ValueError('Keycap graphics failed their integrity check. Extract the complete current Release again.')
+    with Image.open(template_path) as image:
+        if image.format != 'PNG' or image.size != (1024, 1024) or image.mode != 'RGBA':
+            raise ValueError('Unsupported keycap image format or dimensions')
+        image.load()
+        result = image.copy()
+    print('Portable keycap graphics confirmed; no Windows font dependency.', flush=True)
+    return result
 
 
 def generate(game,output,logo=None,font=None,recipes=('water','title','lens','keycaps')):
@@ -151,7 +150,7 @@ def generate(game,output,logo=None,font=None,recipes=('water','title','lens','ke
         logo_data=logo_path.read_bytes()
         if sha(logo_data)!=config['title']['logo_sha256']:raise ValueError('Use the approved project logo; no automatic redesign is performed')
     if 'keycaps' in selected:
-        font=check_keycap_font(source_root, font)
+        template=load_keycap_template(source_root)
     originals=Originals(game);output.mkdir();writer=Output(output)
     try:
         if 'water' in selected:
@@ -174,7 +173,7 @@ def generate(game,output,logo=None,font=None,recipes=('water','title','lens','ke
             atlas=texture_image(originals.get(c['mouse_atlas']),(1024,512))
             points=native_mouse_points(originals.get(c['inventory_movie']))
             native_mice=[mouse_image(atlas,points,tx) for tx in (-5962,-4618)]
-            writer.pack('keycaps',c['replacements'],build(c,sources,font,native_mice))
+            writer.pack('keycaps',c['replacements'],build(c,sources,template,native_mice))
         if file_sha(executable)!=STOCK_EXE_SHA256:raise ValueError('Original executable changed during local generation')
         report={'schema':1,'source_executable_sha256':STOCK_EXE_SHA256,'original_files_written':False,
                 'redistributable_game_content':False,'packs':writer.packs,'files':writer.files}
@@ -194,7 +193,7 @@ def generate(game,output,logo=None,font=None,recipes=('water','title','lens','ke
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('game',type=Path);parser.add_argument('output',type=Path)
-    parser.add_argument('--logo',type=Path);parser.add_argument('--font',type=Path)
+    parser.add_argument('--logo',type=Path);parser.add_argument('--font',type=Path,help=argparse.SUPPRESS)
     parser.add_argument('--recipes',default='water,title,lens,keycaps',help='Comma-separated recipe subset')
     args=parser.parse_args();report=generate(args.game,args.output,args.logo,args.font,args.recipes.split(','))
     print(json.dumps({'output':str(args.output),'packs':report['packs'],'files':len(report['files']),'original_files_written':False}))

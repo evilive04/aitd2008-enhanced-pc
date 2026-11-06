@@ -5,7 +5,7 @@
 3. Click **Install mod** and approve missing requirements if needed.
 4. Use **AITD Enhanced Launcher.exe** in the game folder to play.
 
-Version **0.1.0-rc3** is a preview. Complete gameplay acceptance remains pending.
+Version **0.1.0-rc4** is a preview. Complete gameplay acceptance remains pending.
 The requirements, removal instructions and developer details are below.
 
 ## Manual requirements
@@ -65,9 +65,10 @@ files are copied until requirements pass. Downloaded Python installers are
 retained under the adjacent `downloads` folder and may be removed afterward.
 
  Unsupported original game
-files, missing dependencies or an unsupported Windows UI font cause an explicit
-failure rather than silently substituting different artwork. The tutorial-keycap
-recipe currently requires the exact supported Segoe UI Bold font version.
+files, missing dependencies or damaged project graphics cause an explicit
+failure. Tutorial keys use the included project graphics, with no dependence
+on the version of Segoe UI installed in Windows. The graphics use OFL Noto Sans
+Bold and preserve the key layout, native mouse cells and texture mapping.
 
 The command-line equivalent, using the same selected Python, is:
 

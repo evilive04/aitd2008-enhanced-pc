@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc3",
+  "version": "0.1.0-rc4",
   "status": "compatibility-in-progress",
   "scope": "Curated source candidate. Runtime preview is awaiting final user gameplay checks; no original game files are included. Owner-supplied map artwork distribution was approved on 2026-11-03.",
   "files": [
@@ -17,6 +17,9 @@
     "assets/ui/cursor_metal.cur",
     "assets/ui/cursor_metal.png",
     "assets/ui/episode_cards.png",
+    "assets/ui/keycaps-OFL.txt",
+    "assets/ui/keycaps-provenance.json",
+    "assets/ui/keycaps-template.png",
     "assets/ui/roots-corner.png",
     "assets/ui/slate.png",
     "configs/enhanced-defaults.ini",

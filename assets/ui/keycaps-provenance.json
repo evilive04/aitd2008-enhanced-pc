@@ -1,0 +1,10 @@
+{
+  "template_sha256": "1fa7a300350fb2db8a37d44bb02efd2f618bdb21b8bb57bb31571837fa762878",
+  "font_sha256": "c976e4b1b99edc88775377fcc21692ca4bfa46b6d6ca6522bfda505b28ff9d6a",
+  "source_font": "https://github.com/notofonts/noto-fonts/blob/main/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
+  "font_license": "SIL Open Font License 1.1",
+  "width": 1024,
+  "height": 1024,
+  "game_pixels_in_template": false,
+  "expected_local_resource_sha256": "426d48b9ee84671df53ae798457bd3ebafbc09ae289d051ca1fa760f7cba371e"
+}
