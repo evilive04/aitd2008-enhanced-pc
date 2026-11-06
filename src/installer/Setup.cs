@@ -252,7 +252,10 @@ namespace EnhancedSetup {
         [STAThread]
         static void Main() {
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
-            try { Application.Run(new SetupWindow()); }
+            try {
+                if(String.Equals(Path.GetFileName(Application.ExecutablePath),"uninstall mod.exe",StringComparison.OrdinalIgnoreCase))Application.Run(new UninstallWindow());
+                else Application.Run(new SetupWindow());
+            }
             catch(Exception error) { MessageBox.Show("Setup could not start.\r\n"+error.Message,"Enhanced Setup",MessageBoxButtons.OK,MessageBoxIcon.Error); }
         }
     }

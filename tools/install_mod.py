@@ -38,7 +38,7 @@ def relative_name(value: object) -> str:
     if path.name.casefold() in FORBIDDEN or path.suffix.casefold() in GAME_SUFFIXES:
         raise ValueError('Game files are never installation targets')
     if path.parts[0] not in ('assets', 'enhanced-ui', '.enhanced', 'mods') and value not in (
-            'd3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini'):
+            'd3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
         raise ValueError('Unreviewed installation target')
     return path.as_posix()
 
@@ -111,7 +111,7 @@ def load_payload(distribution: Path) -> dict[str, Path]:
         if not isinstance(row, dict) or source.stat().st_size != row.get('bytes') or file_sha(source) != row.get('sha256'):
             raise ValueError('Release file failed its integrity check: ' + name)
         result[name] = source
-    for required in ('d3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini'):
+    for required in ('d3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
         if required not in result:
             raise ValueError('Incomplete release')
     return result
@@ -136,6 +136,29 @@ def collect(directory: Path, prefix: str) -> dict[str, Path]:
     return result
 
 
+def run_preparation(command: list[str], tools: Path, label: str) -> None:
+    """Forward child stderr explicitly: inherited hidden-console handles can lose it."""
+    from collections import deque
+    tail = deque(maxlen=24)
+    with subprocess.Popen(command, cwd=tools, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, text=True, encoding='utf-8',
+                          errors='replace', creationflags=0x08000000 if os.name == 'nt' else 0) as child:
+        assert child.stdout is not None
+        for line in child.stdout:
+            line = line.rstrip('\r\n')
+            # These are our fixed local helpers, not shell commands or plugins.
+            # Bound individual log records while preserving ordinary tracebacks.
+            if len(line) > 8192:
+                line = line[:8192] + ' [line truncated]'
+            print('[' + label + '] ' + line, flush=True)
+            tail.append(line)
+        status = child.wait()
+    if status:
+        detail = '\n'.join(tail) or 'The helper returned no diagnostic output.'
+        raise RuntimeError(label + ' preparation failed (exit ' + str(status) + ').\n' +
+                           detail + '\nNo mod files have been copied into the game folder.')
+
+
 def prepare(game: Path, distribution: Path, stage: Path) -> dict[str, Path]:
     dependencies()
     files = load_payload(distribution)
@@ -143,16 +166,19 @@ def prepare(game: Path, distribution: Path, stage: Path) -> dict[str, Path]:
         if below(game, name).exists():
             raise ValueError('Existing file would be replaced. Use a clean game installation: ' + name)
     tools = Path(__file__).resolve().parent
+    # Report this machine-specific prerequisite before lengthy resource generation.
+    from generate_texture_mods import check_keycap_font
+    check_keycap_font(distribution)
     # Every generator receives the original read-only installation and a NEW
     # destination outside it. No original-content staging tree is distributed.
     jobs = [('extract_runtime_ui.py', 'native'), ('generate_texture_mods.py', 'textures'),
             ('generate_ui_mods.py', 'interface'), ('generate_map_mods.py', 'maps')]
     for script, leaf in jobs:
         print('Preparing local assets: ' + leaf, flush=True)
-        command = [sys.executable, str(tools / script), str(game), str(stage / leaf)]
+        command = [sys.executable, '-E', '-u', '-X', 'utf8', str(tools / script), str(game), str(stage / leaf)]
         if leaf == 'textures':
             command += ['--logo', str(distribution / 'payload' / 'assets' / 'ui' / 'aitd_logo.png')]
-        subprocess.run(command, check=True, cwd=tools, creationflags=0x08000000 if os.name == 'nt' else 0)
+        run_preparation(command, tools, leaf)
     files.update(collect(stage / 'native' / 'assets', 'assets'))
     for leaf in ('textures', 'interface', 'maps'):
         for target, source in collect(stage / leaf / 'mods', 'mods').items():
@@ -194,10 +220,15 @@ def commit(game: Path, files: dict[str, Path]) -> dict:
         plan.append((name, plain_path(source), destination))
     created = []
     report = {'schema': 1, 'original_exe_sha256': STOCK_EXE_SHA256,
-              'generated_game_assets_are_local_only': True, 'files': {}}
+              'generated_game_assets_are_local_only': True, 'files': {}, 'created_directories': []}
+    created_directories = set()
     try:
         for name, source, destination in plan:
             below(game, name)
+            parent = destination.parent
+            while parent != game and not parent.exists():
+                created_directories.add(parent.relative_to(game).as_posix())
+                parent = parent.parent
             destination.parent.mkdir(parents=True, exist_ok=True)
             expected = file_sha(source)
             # Exclusive creation: a concurrent file is never overwritten.
@@ -212,6 +243,7 @@ def commit(game: Path, files: dict[str, Path]) -> dict:
         if file_sha(game / 'Alone.exe') != STOCK_EXE_SHA256:
             raise ValueError('Original executable changed during setup')
         marker = game / '.enhanced-install.json'
+        report['created_directories'] = sorted(created_directories)
         with marker.open('x', encoding='utf-8') as stream:
             identity = os.fstat(stream.fileno())
             created.append((marker, identity.st_dev, identity.st_ino))

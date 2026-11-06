@@ -101,6 +101,32 @@ class Output:
         self.packs.append(PACKS[name])
 
 
+def check_keycap_font(source_root, font=None):
+    config_path = plain_path(Path(source_root) / 'configs/texture-recipes.json')
+    if config_path.stat().st_size > 1024 * 1024:
+        raise ValueError('Recipe metadata exceeds limit')
+    config = json.loads(config_path.read_text(encoding='utf-8'))
+    if config.get('schema') != 1 or config.get('target_exe_sha256') != STOCK_EXE_SHA256:
+        raise ValueError('Unsupported texture recipe metadata')
+    expected = config['keycaps']['font_sha256']
+    candidate = font or Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts' / config['keycaps']['font_filename']
+    try:
+        candidate = plain_path(candidate)
+        if candidate.stat().st_size > 32 * 1024 * 1024:
+            raise ValueError('Installed font exceeds size bounds')
+        actual = file_sha(candidate)
+    except OSError as error:
+        raise ValueError('SETUP_FONT_UNAVAILABLE: Cannot read the Windows UI font at ' +
+                         str(candidate) + '. ' + str(error)) from None
+    if actual != expected:
+        raise ValueError('SETUP_FONT_VERSION_MISMATCH: This Windows Segoe UI Bold edition is not yet supported by the keycap recipe.\n' +
+                         'Font: ' + str(candidate) + '\nExpected SHA256: ' + expected +
+                         '\nInstalled SHA256: ' + actual +
+                         '\nPlease send this log. Do not replace Windows fonts or modify the expected hash.')
+    print('Windows keycap font confirmed.', flush=True)
+    return candidate
+
+
 def generate(game,output,logo=None,font=None,recipes=('water','title','lens','keycaps')):
     if struct.calcsize('P')!=8:raise ValueError('Use 64-bit Python for bounded high-resolution texture generation')
     source_root=Path(__file__).resolve().parents[1]
@@ -125,9 +151,7 @@ def generate(game,output,logo=None,font=None,recipes=('water','title','lens','ke
         logo_data=logo_path.read_bytes()
         if sha(logo_data)!=config['title']['logo_sha256']:raise ValueError('Use the approved project logo; no automatic redesign is performed')
     if 'keycaps' in selected:
-        font=plain_path(font or Path(os.environ.get('WINDIR','C:/Windows'))/'Fonts'/config['keycaps']['font_filename'])
-        if font.stat().st_size>32*1024*1024 or file_sha(font)!=config['keycaps']['font_sha256']:
-            raise ValueError('Approved installed Segoe UI Bold font version is required for the unchanged keycap design')
+        font=check_keycap_font(source_root, font)
     originals=Originals(game);output.mkdir();writer=Output(output)
     try:
         if 'water' in selected:

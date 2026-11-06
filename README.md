@@ -2,7 +2,7 @@
 
 ## Install
 
-1. [Download the mod](https://github.com/evilive04/aitd2008-enhanced-pc/releases/tag/v0.1.0-rc2), choose **AITD-Enhanced-PC-0.1.0-rc2.zip**, and extract the whole archive.
+1. [Download the mod](https://github.com/evilive04/aitd2008-enhanced-pc/releases/tag/v0.1.0-rc3), choose **AITD-Enhanced-PC-0.1.0-rc3.zip**, and extract the whole archive.
 2. Close the game and run **Setup.exe**. Select your original Steam game folder.
 3. If requirements are missing, approve their automatic download and setup. **Manual downloads** are also available.
 4. Start **AITD Enhanced Launcher.exe** from the game folder, choose your settings, and play.
@@ -33,6 +33,8 @@ for a trusted Python Software Foundation signature before it runs.
 See [manual requirements](README-INSTALL.md#manual-requirements) for offline setup.
 The supported game is the original English Steam executable 08.19.14.
 Other executable versions are rejected. Setup also checks the required Windows font.
+To remove the mod, run **uninstall mod.exe** in the game folder. Original game
+files and saved games are kept; modified mod files require separate consent.
 
 </details>
 

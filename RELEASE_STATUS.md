@@ -1,3 +1,49 @@
+# Installer revision 0.1.0-rc3
+
+This revision adds uninstall mod.exe and explicitly forwards generator stderr
+into the setup log. The reported texture-preparation failure on another PC is not
+diagnosed by its generic child-exit traceback: its underlying cause remains
+unknown until an affected-machine log with these diagnostics is available.
+An exact Windows-font mismatch is only a candidate explanation. Validation and
+artwork design are not relaxed as a substitute for finding the actual cause.
+
+The game DLLs and launcher remain unchanged. The same rebuilt Setup binary is
+installed under uninstall mod.exe; its filename selects the removal UI. Removal
+uses the bounded installed-file receipt, preserves modified files by default,
+removes only recognized own cache generations and cleans up itself after exit.
+Unknown files, original game data, saves and shared outside-game prerequisites
+are preserved.
+
+<details>
+<summary>Targeted installer/uninstaller checks (rc3)</summary>
+
+The final production Setup/uninstaller built with warnings treated as errors.
+Real successful/failing Python subprocesses verified merged stdout/stderr,
+UTF-8 diagnostics, exit codes and a preparation failure before game copying.
+Exact font identity, mismatch reporting and missing-font reporting passed.
+
+Production compiled removal methods passed actual file-handle deletion,
+receipt/path/device-name validation, modified-file preservation and opt-in
+removal, original/custom/other-mod preservation, known cache cleanup and
+rejection of a real test junction. An actual Python installation commit in a
+synthetic fixture generated a receipt consumed by the production remover.
+
+The first final-helper test found a missing PowerShell command dependency.
+After replacement with direct .NET operations, repeated actual helper-process
+checks passed with an empty PSModulePath: wait for the parent, remove own files,
+remove the temporary helper, and preserve files if receipt or EXE changed.
+
+All checks used isolated synthetic fixtures. The fixture's EXE verification was
+substituted with a sentinel identity; the real game was not launched or changed.
+Actual uninstaller GUI clicking, its running-EXE image-lock lifecycle, and a
+complete install/remove flow on the affected computer were not tested. The
+texture failure's underlying cause remains unknown pending its new log.
+
+</details>
+
+<details>
+<summary>Earlier Setup checks and limitations (rc2)</summary>
+
 # Setup revision 0.1.0-rc2
 
 This revision changes Setup and player documentation. The game DLLs and launcher
@@ -135,5 +181,7 @@ LAA change. Its ordinary 2 GiB address-space limit is retained. The bounded menu
 probe is not evidence of memory stability throughout the story at high graphics
 settings; longer gameplay and memory pressure remain unverified.
 
+
+</details>
 
 </details>

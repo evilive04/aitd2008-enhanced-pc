@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "package": "aitd-enhanced-pc",
-  "version": "0.1.0-rc2",
+  "version": "0.1.0-rc3",
   "status": "preview-awaiting-user-gameplay",
   "target_exe_sha256": "d8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818",
   "source_files": {
@@ -62,7 +62,8 @@
     "payload/d3d9.dll": "build/performance/d3d9.dll",
     "payload/dinput8.dll": "build/volume-input/dinput8.dll",
     "payload/AITD Enhanced Launcher.exe": "build/launcher/Spustit hru.exe",
-    "Setup.exe": "build/installer/AITD Enhanced Setup.exe"
+    "Setup.exe": "build/installer/AITD Enhanced Setup.exe",
+    "payload/uninstall mod.exe": "build/installer/AITD Enhanced Setup.exe"
   },
   "media_files": {
     "payload/enhanced-ui/menu-loop.mp4": "menu-loop.mp4",

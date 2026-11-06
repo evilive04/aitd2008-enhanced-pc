@@ -21,7 +21,7 @@ from package_public import (PackageError, checked_absolute, reject_reparse,
                             relative_name, snapshot_file)
 
 
-VERSION = '0.1.0-rc2'
+VERSION = '0.1.0-rc3'
 STATUS = 'preview-awaiting-user-gameplay'
 TARGET = 'd8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818'
 VIDEO_SHA = 'c8d4dc89d06e0c16a364f1fd255be0e7dae4e80ed26894cdd94e43d96723e77a'
@@ -263,6 +263,9 @@ def validate_provenance(root, provenance):
         exact_digest(data, row, relative)
         validate_pe(data, component)
         result[target] = data
+        if component == 'setup':
+            # The same own binary selects the removal UI only under this name.
+            result['payload/uninstall mod.exe'] = data
     return result
 
 
@@ -270,6 +273,7 @@ def validate_selection(root, media, provenance_path):
     selection = parse_json(snapshot_file(root, 'release/runtime-files.json'))
     expected_source = source_mapping()
     expected_binary = {target: path for path, target in COMPONENTS.values()}
+    expected_binary['payload/uninstall mod.exe'] = COMPONENTS['setup'][0]
     if (selection.get('schema') != 1 or selection.get('version') != VERSION or
             selection.get('status') != STATUS or selection.get('target_exe_sha256') != TARGET or
             selection.get('source_files') != expected_source or

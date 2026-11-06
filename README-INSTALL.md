@@ -5,7 +5,7 @@
 3. Click **Install mod** and approve missing requirements if needed.
 4. Use **AITD Enhanced Launcher.exe** in the game folder to play.
 
-Version **0.1.0-rc2** is a preview. Complete gameplay acceptance remains pending.
+Version **0.1.0-rc3** is a preview. Complete gameplay acceptance remains pending.
 The requirements, removal instructions and developer details are below.
 
 ## Manual requirements
@@ -84,10 +84,23 @@ removal, an executable patcher or activation assistance.
 
 Use the English custom launcher for the supported settings. Installed defaults
 are in `aitd-enhanced.ini`. The installed `.enhanced-install.json` receipt lists
-the mod files; preserve it for troubleshooting. No automatic uninstaller is
-included in this preview. To remove the mod manually, close the game and remove
-only the mod files listed in that receipt, preserving saves and original files.
-Ask for help if you have added or changed files since installation.
+the mod files; preserve it for troubleshooting. Run **uninstall mod.exe** in the game folder to remove the mod. Close the game,
+launcher and Setup first. The uninstaller reads this receipt, preserves original
+game files and saved games, and removes its own recognized generated archive
+cache. Modified mod files are kept by default; explicitly select the option to
+remove them too if you want to discard your mod settings. Unknown files and
+other mods are preserved. If files are kept or locked, the receipt and uninstaller
+remain available for review and retry. After successful removal the uninstaller
+and receipt remove themselves using a bounded temporary Windows helper.
+
+Python, its package environments, downloaded installers and diagnostic logs
+outside the game folder are preserved, because they may be shared with another
+installation. This does not reset activation or delete Windows fonts. Keep the
+receipt until removal completes.
+
+The included uninstaller is installed starting with rc3 and requires that
+version's receipt. Do not copy it into an older installation or delete its
+receipt manually; preserve the older receipt and ask for migration/removal help.
 
 The supplied defaults enable `ModernSounds`. The three UI cues are embedded in
 the project's renderer DLL for combined use with this mod; they are not separate
