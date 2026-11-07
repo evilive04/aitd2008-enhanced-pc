@@ -158,7 +158,11 @@ namespace EnhancedLauncher {
             Borderless=ini.Get("Display","BorderlessFullscreen","true").Equals("true",StringComparison.OrdinalIgnoreCase)||ini.Get("Display","BorderlessFullscreen","true")=="1";InitialBorderless=Borderless;
             InitialProfile=Native.ReadOptional(ProfilePath);InitialResolution=ParseResolution(InitialProfile)??Native.Desktop();SelectedResolution=InitialResolution;
         }
-        public bool Dirty {get{return Borderless!=InitialBorderless||(!Borderless&&(InitialProfile==null||!SelectedResolution.Equals(InitialResolution)))||Draft.Any(k=>k.Value!=baseline[k.Key]);}}
+        // Borderless uses a native-size backbuffer. The game's own render/UI
+        // dimensions must agree before startup; resizing only the D3D surface
+        // leaves native rendering and hit testing at an older profile size.
+        Resolution EffectiveResolution {get{return Borderless?Native.Desktop():SelectedResolution;}}
+        public bool Dirty {get{return Borderless!=InitialBorderless||InitialProfile==null||!EffectiveResolution.Equals(InitialResolution)||Draft.Any(k=>k.Value!=baseline[k.Key]);}}
         public string Save(Func<bool> running,Action<string> beforeCommit=null) {
             if(running())throw new InvalidOperationException("Close the game before saving settings.");
             using(var gate=new System.Threading.Mutex(false,@"Local\AITDSettings-"+Native.Hash(DirectoryPath))) {
@@ -169,10 +173,11 @@ namespace EnhancedLauncher {
                     foreach(var o in Catalog.All)if(Draft[o.Id]!=baseline[o.Id])ini.Set(o.Section,o.Key,Catalog.Normalize(o,Draft[o.Id]));
                     if(Borderless!=InitialBorderless)ini.Set("Display","BorderlessFullscreen",Borderless?"true":"false");
                     byte[] nextIni=ini.Bytes(),nextProfile=InitialProfile;
-                    bool resolutionChanged=!Borderless&&(InitialProfile==null||!SelectedResolution.Equals(InitialResolution));
+                    var effectiveResolution=EffectiveResolution;
+                    bool resolutionChanged=InitialProfile==null||!effectiveResolution.Equals(InitialResolution);
                     if(resolutionChanged) {
-                        if(!Native.Modes().Contains(SelectedResolution))throw new InvalidOperationException("The selected resolution is no longer available on the primary monitor.");
-                        nextProfile=Encoding.ASCII.GetBytes(string.Format(CultureInfo.InvariantCulture,"ResolutionWidth = {0}\r\nResolutionHeight = {1}\r\nNewResolution = 0\r\nPrevResolutionWidth = {0}\r\nPrevResolutionHeight = {1}\r\n",SelectedResolution.Width,SelectedResolution.Height));
+                        if(effectiveResolution.Width<16||effectiveResolution.Height<16||effectiveResolution.Width>16384||effectiveResolution.Height>16384||(!Borderless&&!Native.Modes().Contains(effectiveResolution)))throw new InvalidOperationException("The selected resolution is no longer available on the primary monitor.");
+                        nextProfile=Encoding.ASCII.GetBytes(string.Format(CultureInfo.InvariantCulture,"ResolutionWidth = {0}\r\nResolutionHeight = {1}\r\nNewResolution = 0\r\nPrevResolutionWidth = {0}\r\nPrevResolutionHeight = {1}\r\n",effectiveResolution.Width,effectiveResolution.Height));
                     }
                     bool writeIni=!Native.Same(nextIni,InitialIni),writeProfile=!Native.Same(nextProfile,InitialProfile);
                     if(!writeIni&&!writeProfile)return "";

@@ -2,7 +2,7 @@
 
 ## Install
 
-1. [Download the mod](https://github.com/evilive04/aitd2008-enhanced-pc/releases/tag/v0.1.0-rc4), choose **AITD-Enhanced-PC-0.1.0-rc4.zip**, and extract the whole archive.
+1. [Download the mod](https://github.com/evilive04/aitd2008-enhanced-pc/releases/tag/v0.1.0-rc5), choose **AITD-Enhanced-PC-0.1.0-rc5.zip**, and extract the whole archive.
 2. Close the game and run **Setup.exe**. Select your original Steam game folder.
 3. If requirements are missing, approve their automatic download and setup. **Manual downloads** are also available.
 4. Start **AITD Enhanced Launcher.exe** from the game folder, choose your settings, and play.
@@ -35,6 +35,13 @@ The supported game is the original English Steam executable 08.19.14.
 Other executable versions are rejected. Keycap graphics are included; no particular Windows font edition is required.
 To remove the mod, run **uninstall mod.exe** in the game folder. Original game
 files and saved games are kept; modified mod files require separate consent.
+Updating an older preview? Back up custom mod settings, uninstall it with
+**Also remove modified mod files (including my mod settings)** selected, then
+install the new version and choose your settings again in its launcher.
+Keep any backup outside the game folder; do not overwrite the new defaults
+with an old INI file.
+If an older uninstaller leaves **AITD Runtime.exe**, move that exact mod file to
+your external backup before installing. This version records it for removal.
 
 </details>
 

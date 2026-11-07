@@ -51,7 +51,10 @@ struct Presentation{
    else if(edges.pressed&128)action={A::PagePrevious};else if(edges.pressed&256)action={A::PageNext};
   }else{keys.Reset(held);pressed={};}
   if(!Paint(device,canvas,mouse,x,y))return ChaptersUnavailable;
-  if(action.action!=chapters_art::Action::None&&sender(static_cast<DWORD>(action.action),action.row,s.generation)){
+  const bool prepared=action.action==chapters_art::Action::Activate&&menu_overlay::PrepareForLoad();
+  const bool queued=action.action!=chapters_art::Action::None&&sender(static_cast<DWORD>(action.action),action.row,s.generation);
+  if(!queued&&prepared)menu_overlay::CancelPreparedLoad();
+  if(queued){
    using A=chapters_art::Action;
 
    // Native chapter-change timelines already emit the replaced movechap cue.

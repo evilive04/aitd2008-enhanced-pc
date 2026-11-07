@@ -5,12 +5,12 @@
 3. Click **Install mod** and approve missing requirements if needed.
 4. Use **AITD Enhanced Launcher.exe** in the game folder to play.
 
-Version **0.1.0-rc4** is a preview. Complete gameplay acceptance remains pending.
+Version **0.1.0-rc5** is a preview. Complete gameplay acceptance remains pending.
 The requirements, removal instructions and developer details are below.
 
 ## Manual requirements
 
-- Windows and your own working, normally activated Steam installation of
+- 64-bit Windows and your own working, normally activated Steam installation of
   Alone in the Dark (2008).
 - The supported original `Alone.exe`: SHA-256
   `d8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818`.
@@ -30,6 +30,13 @@ The requirements, removal instructions and developer details are below.
 
 Keep a normal backup of your game and saves. Close the game before installing.
 Use a clean installation: Setup refuses to overwrite existing mod files.
+To update an installed preview, back up any custom mod settings outside the game
+folder, run **uninstall mod.exe**, and select **Also remove modified mod files
+(including my mod settings)**. Then install the new release and choose your
+settings again in its launcher. Do not restore an old INI over the new defaults.
+Older previews may leave `AITD Runtime.exe` after uninstalling. If that exact
+mod file remains, move it to a backup outside the game folder before installing
+this release. The new installer records the runtime for subsequent removal.
 The game folder must retain its 107 required original files: six archive files,
 100 movie files and `ShaderCache/Offline.sha`. Setup checks their presence;
 exact original resource checks run during local preparation. A game manual PDF
@@ -152,3 +159,10 @@ This is an unofficial mod, not an endorsed game edition. Original project code
 uses the MIT license. Owner-approved artwork and video are outside the MIT
 grant; see `ASSET_RIGHTS.md` and `THIRD_PARTY_NOTICES.md`. Original game names
 and marks remain their holders' property. No legal guarantee is offered.
+
+### rc5 startup correction
+
+Setup now generates the menu credit text from your own game together with the
+interface. It checks that the text exists before committing installation. The
+launcher also keeps borderless native render dimensions in sync with the
+monitor instead of only resizing the Direct3D surface.

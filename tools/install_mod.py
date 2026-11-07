@@ -38,7 +38,7 @@ def relative_name(value: object) -> str:
     if path.name.casefold() in FORBIDDEN or path.suffix.casefold() in GAME_SUFFIXES:
         raise ValueError('Game files are never installation targets')
     if path.parts[0] not in ('assets', 'enhanced-ui', '.enhanced', 'mods') and value not in (
-            'd3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
+            'd3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'AITD Runtime.exe', 'AITD Video Worker.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
         raise ValueError('Unreviewed installation target')
     return path.as_posix()
 
@@ -111,7 +111,7 @@ def load_payload(distribution: Path) -> dict[str, Path]:
         if not isinstance(row, dict) or source.stat().st_size != row.get('bytes') or file_sha(source) != row.get('sha256'):
             raise ValueError('Release file failed its integrity check: ' + name)
         result[name] = source
-    for required in ('d3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
+    for required in ('d3d9.dll', 'dinput8.dll', 'AITD Enhanced Launcher.exe', 'AITD Runtime.exe', 'AITD Video Worker.exe', 'aitd-enhanced.ini', 'uninstall mod.exe'):
         if required not in result:
             raise ValueError('Incomplete release')
     return result
@@ -180,6 +180,10 @@ def prepare(game: Path, distribution: Path, stage: Path) -> dict[str, Path]:
             command += ['--logo', str(distribution / 'payload' / 'assets' / 'ui' / 'aitd_logo.png')]
         run_preparation(command, tools, leaf)
     files.update(collect(stage / 'native' / 'assets', 'assets'))
+    credits=stage/'interface'/'enhanced-ui'/'credits.txt'
+    if not credits.is_file() or not 0<credits.stat().st_size<=1024*1024:
+        raise ValueError('Local menu credits were not generated; installation cannot start the enhanced menu.')
+    files.update(collect(stage/'interface'/'enhanced-ui','enhanced-ui'))
     for leaf in ('textures', 'interface', 'maps'):
         for target, source in collect(stage / leaf / 'mods', 'mods').items():
             if target in files:

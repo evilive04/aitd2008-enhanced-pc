@@ -161,7 +161,7 @@ static void TryConfigureNativeRenderer(){
  aimOverlayEnabled=ConfigFlag(L"Controls",L"ModernCombat",true,config);
  ammoOverlayEnabled=ConfigFlag(L"HUD",L"Ammunition",true,config);
  favoritesOverlayEnabled=ConfigFlag(L"Controls",L"Favorites",true,config);
- displaySettingsFix=ConfigFlag(L"Compatibility",L"FixDisplaySettingsCrash",false,config);
+ displaySettingsFix=ConfigFlag(L"Compatibility",L"FixDisplaySettingsCrash",true,config);
  ConfigureShadowResourceProbe(config,true);ConfigureNativeShadowQuality(config,true);
  ConfigureRemakeMenu(config,true);ConfigureRemakeInterface(config,true);
  ConfigureModernUiSound(config,true);ConfigureSubsurfaceScattering(config,true);
@@ -456,6 +456,11 @@ static HRESULT STDMETHODCALLTYPE ObservedCreateDevice(IDirect3D9* object,UINT ad
     TryConfigureNativeRenderer();
     ApplyDisplaySettingsFix();
     Log("CreateDevice adapter=%u type=%u behavior=0x%08lx",adapter,type,behavior);
+    if(diagnostics){
+        D3DADAPTER_IDENTIFIER9 identifier{};
+        if(SUCCEEDED(object->GetAdapterIdentifier(adapter,0,&identifier)))
+            Log("Graphics adapter description=%.*s vendor=%08lx device=%08lx",511,identifier.Description,identifier.VendorId,identifier.DeviceId);
+    }
     LogParameters("CreateDevice requested",parameters);
     BorderlessChange borderlessChange{};
     if(type==D3DDEVTYPE_HAL && !(behavior&D3DCREATE_ADAPTERGROUP_DEVICE))

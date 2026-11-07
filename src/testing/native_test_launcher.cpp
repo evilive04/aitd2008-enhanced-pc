@@ -3,6 +3,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <bcrypt.h>
+#include "../shared/startup_affinity_policy.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -50,11 +51,33 @@ struct VerifiedImage {
 [[maybe_unused]] static bool StockStartupAffinity(HANDLE child){
     DWORD_PTR allowed{},system{};
     if(!GetProcessAffinityMask(child,&allowed,&system))return false;
-    DWORD_PTR selected=0;unsigned count=0;
-    for(unsigned bit=0;bit<sizeof(DWORD_PTR)*8&&count<2;++bit){
-        const DWORD_PTR flag=static_cast<DWORD_PTR>(1)<<bit;
-        if(allowed&flag){selected|=flag;++count;}
+    std::vector<startup_affinity::Core> cores;
+    USHORT groupCount=1,group{};DWORD bytes{};
+    if(GetProcessGroupAffinity(child,&groupCount,&group)&&groupCount==1&&
+       !GetLogicalProcessorInformationEx(RelationProcessorCore,nullptr,&bytes)&&
+       GetLastError()==ERROR_INSUFFICIENT_BUFFER&&bytes&&bytes<=1024*1024){
+        std::vector<BYTE> topology(bytes);
+        if(GetLogicalProcessorInformationEx(RelationProcessorCore,
+                reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(topology.data()),&bytes)&&bytes<=topology.size()){
+            const std::size_t firstMask=offsetof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,Processor.GroupMask);
+            bool valid=true;std::size_t offset=0;
+            while(offset<bytes){
+                if(bytes-offset<offsetof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,Processor)){valid=false;break;}
+                const auto* record=reinterpret_cast<const SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*>(topology.data()+offset);
+                if(record->Size<firstMask||record->Size>bytes-offset||
+                   record->Relationship!=RelationProcessorCore||!record->Processor.GroupCount||
+                   record->Processor.GroupCount>(record->Size-firstMask)/sizeof(GROUP_AFFINITY)){valid=false;break;}
+                for(unsigned i=0;i<record->Processor.GroupCount;++i){
+                    const auto& affinity=record->Processor.GroupMask[i];
+                    if(affinity.Group==group&&(affinity.Mask&allowed))
+                        cores.push_back({affinity.Mask&allowed,record->Processor.EfficiencyClass});
+                }
+                offset+=record->Size;
+            }
+            if(!valid)cores.clear();
+        }
     }
+    const auto selected=startup_affinity::Select(allowed,cores.data(),cores.size());
     return selected&&SetProcessAffinityMask(child,selected)!=FALSE;
 }
 

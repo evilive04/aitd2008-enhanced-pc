@@ -103,7 +103,8 @@ struct Presentation::Impl {
         labelsReady=true;return S_OK;
     }
     HRESULT Upload(IDirect3DDevice9* d){
-        diagnostic.stage=200;const bool changed=player.CopyLatest(frame);dirty=dirty||changed;if(FAILED(player.Error()))return player.Error();
+        diagnostic.stage=200;const bool changed=player.CopyLatest(frame);dirty=dirty||changed;
+        if(FAILED(player.Error())){const auto failure=player.Error();player.Stop();if(!frame.serial)return failure;}
         if(!frame.serial)return S_FALSE;
         if(owner!=d){texture.Reset();chroma.Reset();videoShader.Reset();owner=d;}
         if(frame.pixels.size()!=static_cast<std::size_t>(frame.width)*frame.height*3/2)return E_INVALIDARG;
@@ -199,8 +200,24 @@ struct Presentation::Impl {
 };
 Presentation::Presentation():impl_(new Impl){}
 Presentation::~Presentation(){Shutdown();}
-bool Presentation::Start(const wchar_t* path){if(impl_->started)return false;impl_->started=impl_->player.Start(path);return impl_->started;}
+bool Presentation::Start(const wchar_t* path){
+    if(impl_->started||!path||!*path)return false;
+    impl_->error=S_OK;impl_->diagnostic={};impl_->dirty=true;
+    impl_->haveMouse=false;impl_->downItem=~0u;impl_->reveal.Reset();
+    impl_->started=true;
+    if(!impl_->player.Start(path))impl_->Failure(impl_->player.Error(),0,0,"Video startup");
+    return true; // Menu navigation remains available if media startup fails.
+}
 void Presentation::SetVisible(bool visible)noexcept{impl_->player.SetActive(visible);if(!visible){impl_->ready=false;impl_->wasActive=false;impl_->reveal.Reset();}}
+void Presentation::SuspendVideoForLoad(){impl_->player.Stop();}
+bool Presentation::ResumeVideo(const wchar_t* path){
+    if(!impl_->started)return false;
+    impl_->error=S_OK;impl_->diagnostic={};
+    // Keep the last uploaded frame visible while the new worker starts. Its
+    // session-local serial must not collide with the previous session's frame.
+    if(impl_->frame.serial)impl_->frame.serial=~std::uint64_t{};
+    return impl_->player.Start(path);
+}
 HRESULT Presentation::SetCredits(const wchar_t* text){
     if(!text||wcslen(text)>65536)return E_INVALIDARG;
     try{std::vector<Label> pending;std::wstring source(text);std::size_t start=0;float y=0;unsigned triangles=0;
@@ -221,11 +238,18 @@ bool Presentation::Draw(IDirect3DDevice9* d,const MenuStateV1& state,MenuActionS
     SetVisible(true);
     try{
         impl_->diagnostic.stage=100;HRESULT hr=impl_->Labels();if(FAILED(hr)){impl_->Failure(hr,0,0,"Labels");return false;}
-        // A black title does not wait for the asynchronous first video frame.
-        // If Enter reaches navigation before decoding finishes, retain our own
-        // black logo until a complete video frame can begin the reveal.
-        bool drawTitle=title;
-        if(!title){hr=impl_->Upload(d);if(FAILED(hr)){impl_->Failure(hr,0,0,"Upload");return false;}if(hr==S_FALSE)drawTitle=true;}
+        // The native title retains its black logo. Genuine navigation never
+        // waits for a first video frame: a stalled helper must not turn an
+        // already accepted PressAny into a non-interactive title forever.
+        bool drawTitle=title,videoAvailable=false;
+        if(!title){hr=impl_->Upload(d);if(FAILED(hr)){
+            impl_->Failure(hr,0,0,"Upload");
+            if(hr==D3DERR_DEVICELOST||hr==D3DERR_DEVICENOTRESET)return false;
+            // A media failure must never strand navigation behind an invisible
+            // title. Keep the genuine menu and logo usable on a clean backdrop.
+            // A last complete video frame, when available, is retained by Upload.
+            hr=S_OK;
+        }else if(hr!=S_FALSE)videoAvailable=true;}
         impl_->diagnostic.stage=102;
         ComPtr<IDirect3DSurface9> back,target;D3DSURFACE_DESC desc{};D3DCAPS9 caps{};
         if(FAILED(d->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||FAILED(back->GetDesc(&desc))||FAILED(d->GetRenderTarget(0,&target))||target.Get()!=back.Get()||FAILED(d->GetDeviceCaps(&caps)))return false;
@@ -247,7 +271,7 @@ bool Presentation::Draw(IDirect3DDevice9* d,const MenuStateV1& state,MenuActionS
         MENU_TRY(d->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE));MENU_TRY(d->SetTextureStageState(0,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_DISABLE));MENU_TRY(d->SetTextureStageState(0,D3DTSS_TEXCOORDINDEX,0));MENU_TRY(d->SetTextureStageState(0,D3DTSS_RESULTARG,D3DTA_CURRENT));
         MENU_TRY(d->SetTexture(0,nullptr));MENU_TRY(d->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1));MENU_TRY(d->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE));MENU_TRY(d->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1));MENU_TRY(d->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE));
         std::vector<Vertex> black;Quad(black,0,0,static_cast<float>(desc.Width),static_cast<float>(desc.Height),0xff000000);MENU_TRY(d->DrawPrimitiveUP(D3DPT_TRIANGLELIST,2,black.data(),sizeof(Vertex)));
-        if(!drawTitle){
+        if(!drawTitle&&videoAvailable){
         const float x=canvas.x-.5f,y=canvas.y-.5f,w=canvas.width,h=canvas.height;
         const Vertex quad[]={{x,y,0,1,0xffffffff,0,0},{x+w,y,0,1,0xffffffff,1,0},{x+w,y+h,0,1,0xffffffff,1,1},{x,y,0,1,0xffffffff,0,0},{x+w,y+h,0,1,0xffffffff,1,1},{x,y+h,0,1,0xffffffff,0,1}};
         float colors[8]{};menu_nv12_color::Constants(impl_->frame.matrix,impl_->frame.nominalRange,colors);

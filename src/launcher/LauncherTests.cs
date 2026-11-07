@@ -20,6 +20,15 @@ namespace EnhancedLauncher {
      byte[] input=enc.GetPreamble().Concat(enc.GetBytes(text)).ToArray();var doc=new IniDocument(input);Check(Native.Same(doc.Bytes(),input),"encoding and newline round trip");doc.Set("Graphics","SubsurfaceScattering","false");var again=new IniDocument(doc.Bytes());Check(again.Get("Graphics","SubsurfaceScattering","")=="false","edited key");Check(again.Get("Mods","PythonExecutable","")==@"C:\a path\python.exe","unknown path preserved");
     }
     var ini=Path.Combine(root,"aitd-enhanced.ini");var profile=Path.Combine(root,"profile","res.aitd");File.WriteAllText(ini,text,new UTF8Encoding(false));Native.AtomicWrite(profile,Profile(Native.Desktop()));
+    var desktop=Native.Desktop();var stale=desktop.Equals(new Resolution(1280,720))?new Resolution(1920,1080):new Resolution(1280,720);
+    Native.AtomicWrite(profile,Profile(stale));var staleBytes=File.ReadAllBytes(profile);var firstStart=new SettingsStore(root,profile);
+    Check(firstStart.Borderless&&firstStart.Dirty,"borderless detects stale native render dimensions");
+    bool blockedRunning=false;try{firstStart.Save(()=>true);}catch(InvalidOperationException){blockedRunning=true;}
+    Check(blockedRunning&&Native.Same(staleBytes,File.ReadAllBytes(profile)),"running game prevents native resolution repair");
+    string resolutionBackup=firstStart.Save(()=>false);
+    Check(Native.Same(staleBytes,File.ReadAllBytes(Path.Combine(resolutionBackup,"res.aitd.before"))),"borderless repair preserves old resolution in backup");
+    Check(Native.Same(Profile(desktop),File.ReadAllBytes(profile))&&!firstStart.Dirty,"borderless saves coherent current and previous monitor dimensions");
+    Check(firstStart.Save(()=>false)=="","repaired borderless profile is not rewritten");
     var store=new SettingsStore(root,profile);byte[] original=File.ReadAllBytes(ini);Check(!store.Dirty,"opening is clean");Check(store.Save(()=>false)=="","no-op save");Check(Native.Same(original,File.ReadAllBytes(ini)),"no-op is byte identical");
     store.Draft["Graphics/SubsurfaceScattering"]="false";Check(store.Dirty,"toggle dirty");string backup=store.Save(()=>false);Check(Native.Same(original,File.ReadAllBytes(Path.Combine(backup,"aitd-enhanced.ini.before"))),"backup exact");Check(!store.Dirty,"saved clean");Check(new IniDocument(File.ReadAllBytes(ini)).Get("Mods","Unknown","")=="unchanged","unknown key preserved on save");Check(Native.Same(store.InitialProfile,Profile(Native.Desktop())),"graphic toggle leaves resolution alone");
     var hidden=new[]{"Companions/FollowNormally","Companions/CatchUpDistance","Audio/FixRearStereoVoices"};

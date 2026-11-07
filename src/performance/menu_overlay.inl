@@ -1,9 +1,11 @@
 // Renderer integration for the exact supported game. The opt-in remains off
-// until both the local video and the complete private creator list are present.
+// until both the local video and the locally generated creator list are present.
 #include "menu_presentation.h"
 #include <string>
 namespace menu_overlay {
-static bool enabled=false,attempted=false,drawing=false,backdropDrawn=false;
+static bool enabled=false,attempted=false,drawing=false,backdropDrawn=false,mediaSuspended=false,mediaQuiesced=false;
+static bool confirmationPending=false;
+static DWORD confirmationGeneration{},confirmationNativeAction{};
 static wchar_t videoPath[MAX_PATH]{},creditsPath[MAX_PATH]{};
 static menu_presentation::Presentation* presentation=nullptr;
 static IDirect3DDevice9* owner=nullptr;
@@ -11,8 +13,45 @@ static MenuStateGetter getter=nullptr;
 static MenuActionSender sender=nullptr;
 using ReadySetter=BOOL(WINAPI*)(BOOL);
 static ReadySetter setReady=nullptr;
-static DWORD nextLookup=0;
+static DWORD nextLookup=0,outsideSince=0;
 static DWORD previousState=~0u;
+static bool PrepareForLoad(){
+    if(!enabled||!presentation||mediaSuspended||mediaQuiesced)return false;
+    // Finish decoder teardown BEFORE publishing the action to the UI thread.
+    // Keep its uploaded frame: a native confirmation may still be cancelled.
+    // This only touches our own decoder. An expired native snapshot must not
+    // allow the subsequent queue operation to race a still-active decoder.
+    presentation->SuspendVideoForLoad();mediaQuiesced=true;confirmationPending=false;confirmationGeneration=confirmationNativeAction=0;
+    Log("Remake menu decoder released before native load/quit action");
+    return true;
+}
+static void CancelPreparedLoad(){
+    confirmationPending=false;confirmationGeneration=confirmationNativeAction=0;
+    if(!presentation||mediaSuspended||!mediaQuiesced)return;
+    mediaQuiesced=false;
+    if(presentation->ResumeVideo(videoPath))Log("Remake menu decoder resumed after cancelled/rejected action");
+    else Log("Remake menu decoder restart unavailable after cancelled/rejected action");
+}
+static bool AwaitingConfirmation(){return confirmationPending&&mediaQuiesced&&!mediaSuspended;}
+static void ObserveConfirmation(DWORD generation,DWORD action,DWORD result,bool closing){
+    if(!AwaitingConfirmation())return;
+    // Bind the fresh, still unanswered dialog before its buttons can be used.
+    // A stale closing No or another dialog generation cannot resume this load.
+    if(!confirmationGeneration&&!result&&!closing){confirmationGeneration=generation;confirmationNativeAction=action;}
+    if(!confirmationGeneration||generation!=confirmationGeneration||action!=confirmationNativeAction)return;
+    if(result==2)CancelPreparedLoad();
+    else if(result==1){confirmationPending=false;confirmationGeneration=confirmationNativeAction=0;}
+}
+static BOOL WINAPI SendAction(DWORD action){
+    const bool loading=action==MenuContinue||action==MenuNewGame||action==MenuQuit;
+    const bool prepared=loading&&PrepareForLoad();
+    const BOOL accepted=sender?sender(action):FALSE;
+    if(accepted&&mediaQuiesced&&!confirmationPending&&(action==MenuNewGame||action==MenuQuit)){
+        confirmationPending=true;confirmationGeneration=confirmationNativeAction=0;
+    }
+    if(!accepted&&prepared)CancelPreparedLoad();
+    return accepted;
+}
 static bool ReadCredits(std::wstring& output){
     HANDLE file=CreateFileW(creditsPath,GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
     if(file==INVALID_HANDLE_VALUE)return false;
@@ -59,8 +98,9 @@ static void Draw(IDirect3DDevice9* device,const RECT* source,const RECT* destina
             }
         }
         MenuStateV1 state{};
-        const bool valid=!source&&!destination&&getter&&sender&&setReady&&getter(&state,sizeof(state))&&
-            state.size==sizeof(state)&&state.version==1&&(state.flags&MenuAuthenticated)&&now-state.tick<=250;
+        const bool sampled=!source&&!destination&&getter&&sender&&setReady&&getter(&state,sizeof(state))&&
+            state.size==sizeof(state)&&state.version==1&&now-state.tick<=250;
+        const bool valid=sampled&&(state.flags&MenuAuthenticated);
         const bool root=valid&&(state.flags&(MenuRootVisible|MenuTitleVisible));
         const bool transition=valid&&(state.flags&MenuTransitionBackdrop);
         if((root||transition)&&!attempted){
@@ -69,15 +109,33 @@ static void Draw(IDirect3DDevice9* device,const RECT* source,const RECT* destina
                 auto* candidate=new menu_presentation::Presentation;
                 if(SUCCEEDED(candidate->SetCredits(credits.c_str()))&&candidate->Start(videoPath)){
                     presentation=candidate;
-                    // The player and its worker live until process termination.
-                    // Pinning avoids any FreeLibrary/unload race; never join in DllMain.
+                    // The presenter lives until termination, but its decoder and
+                    // frame buffers are released outside the main-menu session.
+                    // Pinning prevents unload races; never join in DllMain.
                     HMODULE pinned=nullptr;GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,
                         reinterpret_cast<LPCWSTR>(&Draw),&pinned);
                 }else delete candidate;
             }else Log("Remake menu: complete UTF8 credits file unavailable; original menu retained");
         }
+        if(!sampled||valid)outsideSince=0;
+        else if(!outsideSince)outsideSince=now?now:1;
+        if(presentation&&sampled&&!valid&&!mediaSuspended&&outsideSince&&now-outsideSince>=100){
+            // A paused 4K decoder still retains its reference-picture pool.
+            // Give that address space back before the native chapter loader;
+            // Keep media alive through authenticated Options/Episodes pages;
+            // ignore a brief failed capture rather than restarting the decoder.
+            presentation->Shutdown();mediaSuspended=true;mediaQuiesced=false;confirmationPending=false;owner=nullptr;
+            Log("Remake menu media released outside authenticated main menu");
+        }
+        if(presentation&&mediaSuspended&&(root||transition)){
+            mediaSuspended=false;
+            if(!presentation->Start(videoPath)){
+                delete presentation;presentation=nullptr;
+                Log("Remake menu media restart unavailable; original menu retained");
+            }else Log("Remake menu media resumed for authenticated main menu");
+        }
         if(presentation){
-            if(root){owner=device;const bool painted=presentation->Draw(device,state,sender);ready=painted&&(state.flags&MenuRootVisible);}
+            if(root){owner=device;const bool painted=presentation->Draw(device,state,SendAction);ready=painted&&(state.flags&MenuRootVisible);}
             else if(transition){owner=device;backdropDrawn=presentation->Draw(device,state,nullptr,true);}
             else presentation->SetVisible((state.flags&MenuAuthenticated)&&now-state.tick<=250);
         }

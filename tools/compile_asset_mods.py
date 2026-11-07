@@ -156,7 +156,51 @@ def rebuild_bank(source, replacements):
     return bytes(output)
 
 
-def load_packs(mods):
+def interface_policy(game):
+    """Match the launcher's UI switches without changing third-party packs.
+
+    Generated UI movies intentionally alter the native chrome. Disabling only
+    the C++ presenter leaves that altered fallback behind. Use the player's
+    original movie when its replacement presenter is disabled. A missing INI
+    preserves the standalone compiler's historical behavior.
+    """
+    path = _plain_path(game / 'aitd-enhanced.ini', missing_ok=True)
+    if not path.exists():
+        return None
+    if not path.is_file() or path.stat().st_size > 1024 * 1024:
+        raise ValueError('Mod configuration is missing or exceeds the size limit')
+    raw = path.read_bytes()
+    encoding = 'utf-16' if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else 'utf-8-sig'
+    text = raw.decode(encoding)
+    section = ''
+    values = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith((';', '#')):
+            continue
+        if line.startswith('[') and line.endswith(']'):
+            section = line[1:-1].strip().casefold()
+        elif section == 'ui' and '=' in line:
+            key, value = line.split('=', 1)
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+                value = value[1:-1]
+            values.setdefault(key.strip().casefold(), value.casefold())
+    # Native ConfigFlag defaults these opt-in presenters to false.
+    interface = values.get('remakeinterface', 'false') in ('true', '1')
+    menu = values.get('remakemenu', 'false') in ('true', '1')
+    return {'interface': interface, 'menu': menu}
+
+
+UI_MOVIES = {
+    ('a', 361, 10): 'chapters', ('a', 367, 22): 'general',
+    ('a', 367, 24): 'helper', ('a', 397, 2582): 'helperqt',
+    ('a', 397, 2583): 'invntory', ('a', 367, 20): 'mainmenu',
+    ('c', 275, 29): 'phone', ('a', 367, 21): 'tips',
+}
+
+
+def load_packs(mods, ui_policy=None):
     records, packs, keys = [], [], set()
     mods = _plain_path(mods)
     for folder in sorted(mods.iterdir()):
@@ -177,15 +221,18 @@ def load_packs(mods):
         replacements = data.get('replacements')
         if not isinstance(replacements, list) or not 0 < len(replacements) <= 4096:
             raise ValueError('Pack must declare bounded replacement entries')
-        packs.append({'id': data['id'], 'manifest_sha256': file_sha(manifest)})
+        pack = {'id': data['id'], 'manifest_sha256': file_sha(manifest)}
+        packs.append(pack)
+        omitted = []
+        declared = set()
         for item in replacements:
             archive, bank, slot = item.get('archive'), item.get('bank_index'), item.get('storage_index')
             if archive not in ('a', 'b', 'c') or type(bank) is not int or type(slot) is not int or min(bank, slot) < 0:
                 raise ValueError('Invalid native resource identity')
             key = archive, bank, slot
-            if key in keys:
-                raise ValueError('Conflicting asset packs: duplicate native resource')
-            keys.add(key)
+            if key in declared:
+                raise ValueError('Pack declares a duplicate native resource')
+            declared.add(key)
             if any(not isinstance(item.get(k), str) or not SHA.fullmatch(item[k]) for k in ('original_sha256', 'sha256')):
                 raise ValueError('Original and replacement SHA256 required')
             asset = contained(folder, item.get('asset'))
@@ -194,7 +241,20 @@ def load_packs(mods):
             payload = asset.read_bytes()
             if digest(payload) != item['sha256']:
                 raise ValueError('Replacement SHA256 mismatch')
+            movie = UI_MOVIES.get(key)
+            if (ui_policy is not None and data['id'] == 'enhanced-native-ui-v173'
+                    and movie is not None and
+                    (not ui_policy['interface'] or (movie == 'mainmenu' and not ui_policy['menu']))):
+                omitted.append(list(key))
+                continue
+            if key in keys:
+                raise ValueError('Conflicting asset packs: duplicate native resource')
+            keys.add(key)
             records.append((key, item, payload))
+        if omitted:
+            # Only changed selections get a new cache identity. The default
+            # enabled layout reuses its existing immutable archive generation.
+            pack['omitted_ui_resources'] = sorted(omitted)
     return records, packs
 
 
@@ -271,7 +331,7 @@ def compile_mods(game, mods):
             raise ValueError('Use game/mods or a separate private mods directory')
     if file_sha(game / 'Alone.exe') != EXE_SHA:
         raise ValueError('Unsupported game executable')
-    records, packs = load_packs(mods)
+    records, packs = load_packs(mods, interface_policy(game))
     if not records:
         return deactivate_empty(mods)
     source_identity = {a: file_sha(game / f'alone_compressed_{a}.fat') for a in sorted({r[0][0] for r in records})}

@@ -90,3 +90,11 @@ The template is distributed with the SIL Open Font License 1.1 notice at
 source-font URL/hash and image hash are in `assets/ui/keycaps-provenance.json`.
 The font file itself is not included. Source: notofonts/noto-fonts,
 `hinted/ttf/NotoSans/NotoSans-Bold.ttf`; copyright The Noto Project Authors.
+
+## Locally generated menu credits (rc5)
+
+Original creator credits are decoded from the authenticated chapters movie in
+the player's installed archives during setup. Only the read-only decoder is
+distributed; the generated enhanced-ui/credits.txt is local game-derived data
+and must not be included in source or release archives. The original startup
+movies and notices remain in the player's game.

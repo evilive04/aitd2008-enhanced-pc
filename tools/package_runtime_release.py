@@ -21,7 +21,7 @@ from package_public import (PackageError, checked_absolute, reject_reparse,
                             relative_name, snapshot_file)
 
 
-VERSION = '0.1.0-rc4'
+VERSION = '0.1.0-rc5'
 STATUS = 'preview-awaiting-user-gameplay'
 TARGET = 'd8a7370a1f4f2418cfeb2f22c0d2e9dafa59f606ff83fbb6fc8311ba84df4818'
 VIDEO_SHA = 'c8d4dc89d06e0c16a364f1fd255be0e7dae4e80ed26894cdd94e43d96723e77a'
@@ -37,15 +37,18 @@ MAP_MEDIA = {
     'new-545.png': (64857, '019df340d451282d02aefb94f83bf9c452c22657ac148a68470af138f89f42f8'),
 }
 BUILD_SCRIPTS = ('tools/build-performance.cmd', 'tools/build-volume-input.cmd',
-                 'tools/build-custom-launcher.cmd', 'tools/build-installer.cmd')
+                 'tools/build-custom-launcher.cmd', 'tools/build-installer.cmd', 'tools/build-video-worker.cmd')
 COMPONENTS = {
     'renderer': ('build/performance/d3d9.dll', 'payload/d3d9.dll'),
     'input': ('build/volume-input/dinput8.dll', 'payload/dinput8.dll'),
     'launcher': ('build/launcher/Spustit hru.exe', 'payload/AITD Enhanced Launcher.exe'),
+    'runtime': ('build/performance/AITD Runtime.exe', 'payload/AITD Runtime.exe'),
+    'video': ('build/video-worker/AITD Video Worker.exe', 'payload/AITD Video Worker.exe'),
     'setup': ('build/installer/AITD Enhanced Setup.exe', 'Setup.exe'),
 }
 HELPERS = ('bank_container.py', 'compile_asset_mods.py', 'decode_bank.py',
            'extract_runtime_ui.py', 'generate_texture_mods.py', 'generate_ui_mods.py',
+           'extract_menu_credits.py', 'menu_credit_text.py', 'menu_credit_fonts.py',
            'generate_map_mods.py',
            'inspect_bank.py', 'inspect_fat.py', 'inspect_scene_ui.py', 'inspect_vmf.py',
            'install_mod.py', 'lzo1x_block.py', 'semantic_ui_codec.py',
@@ -168,10 +171,11 @@ def validate_pe(data, component):
         raise PackageError('Invalid PE signature')
     sections, optional_size, flags = u16(pe + 6), u16(pe + 20), u16(pe + 22)
     optional = pe + 24
-    if (u16(pe + 4) != 0x14c or not 1 <= sections <= 96 or
-            optional_size < 224 or optional + optional_size > len(data) or
-            u16(optional) != 0x10b or u32(optional + 92) < 15):
-        raise PackageError('Expected a bounded x86 PE32 mod component')
+    video = component == 'video'
+    if (u16(pe + 4) != (0x8664 if video else 0x14c) or not 1 <= sections <= 96 or
+            optional_size < (240 if video else 224) or optional + optional_size > len(data) or
+            u16(optional) != (0x20b if video else 0x10b) or u32(optional + (108 if video else 92)) < 15):
+        raise PackageError('Unexpected mod component architecture or PE extent')
     table = optional + optional_size
     if table + sections * 40 > len(data):
         raise PackageError('Truncated PE section table')
@@ -188,7 +192,12 @@ def validate_pe(data, component):
                 return raw + rva - base
         raise PackageError('PE directory is outside a file-backed section')
 
-    if component in ('renderer', 'input'):
+    if video:
+        if flags & 0x2000 or u32(optional + 112 + 14 * 8) or u32(optional + 116 + 14 * 8):
+            raise PackageError('Video worker must be an own native x64 executable')
+        if 'AITD Enhanced isolated video worker v1'.encode('utf-16le') + b'\0\0' not in data:
+            raise PackageError('Own video worker identity is absent')
+    elif component in ('renderer', 'input'):
         if not flags & 0x2000:
             raise PackageError('Native proxy is not a DLL')
         export_rva, export_size = u32(optional + 96), u32(optional + 100)
@@ -215,6 +224,11 @@ def validate_pe(data, component):
                     else {b'AITDGetPhoneState', b'AITDGetMenuState', b'DirectInput8Create'})
         if not required <= names:
             raise PackageError('Own proxy exports missing: ' + component)
+    elif component == 'runtime':
+        if flags & 0x2000 or u32(optional + 96 + 14 * 8) or u32(optional + 100 + 14 * 8):
+            raise PackageError('Runtime must be an own native executable')
+        if 'Enhanced PC - game verification'.encode('utf-16le') + b'\0\0' not in data:
+            raise PackageError('Own native runtime identity is absent')
     else:
         if flags & 0x2000:
             raise PackageError('Launcher/setup must be executables')
@@ -243,19 +257,19 @@ def validate_provenance(root, provenance):
     required_sources = {name for name in source_names if name.startswith('src/')} | set(BUILD_SCRIPTS)
     # A missing entry point must not be concealed by reducing the source manifest.
     entry_points = {'src/performance/proxy.cpp', 'src/performance/volume_input.cpp',
-                    'src/testing/native_test_launcher.cpp', 'src/installer/Setup.cs',
+                    'src/testing/native_test_launcher.cpp', 'src/testing/menu_video_worker.cpp', 'src/installer/Setup.cs',
                     'src/launcher/LauncherUi.cs', 'src/diagnostics/d3d9.def',
                     'src/input/dinput8.def'}
     if not entry_points <= required_sources:
         raise PackageError('Public source tree omits a component entry point')
     records = provenance.get('sources')
     if not isinstance(records, dict) or set(records) != required_sources:
-        raise PackageError('Provenance sources must exactly match public src/ plus four build scripts')
+        raise PackageError('Provenance sources must exactly match public src/ plus build scripts')
     for name in sorted(required_sources):
         exact_digest(snapshot_file(root, name), records[name], name)
     components = provenance.get('components')
     if not isinstance(components, dict) or set(components) != set(COMPONENTS):
-        raise PackageError('Exactly four own build components are required')
+        raise PackageError('Exactly six own build components are required')
     result = {}
     for component, (relative, target) in COMPONENTS.items():
         row = components[component]

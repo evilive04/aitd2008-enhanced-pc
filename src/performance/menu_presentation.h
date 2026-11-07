@@ -19,9 +19,13 @@ public:
     bool Start(const wchar_t* localVideoPath);
     // Call with false when a caller skips Draw entirely outside native menus.
     void SetVisible(bool visible)noexcept;
+    // Before queuing a native load/quit: release decoder CPU pools while the
+    // already uploaded full-resolution frame remains available for dialogs.
+    void SuspendVideoForLoad();
+    bool ResumeVideo(const wchar_t* localVideoPath);
     HRESULT SetCredits(const wchar_t* completeOriginalAndModCredits);
-    // Does not restart/stop media decoding. Returns true only after a complete
-    // frame and its interactive text are drawn and all native D3D state restored.
+    // Returns true after the menu and all native D3D state are restored. A failed
+    // media helper retains a complete last frame or a clean usable backdrop.
     bool Draw(IDirect3DDevice9* device,const MenuStateV1& state,MenuActionSender sender,bool backdropOnly=false)noexcept;
     // Call before native Reset and before releasing its owning device.
     void ReleaseDeviceResources()noexcept;

@@ -233,10 +233,21 @@ extern "C" BOOL WINAPI AITDSetMenuPresentationReady(BOOL ready){
     menu_context::SetPresentationReady(ready);return TRUE;
 }
 static const char* __cdecl FlashlightTutorialPrompt(const char* command,const char* output,std::size_t remaining){
-    if(!pc_prompts::modernControls||!pc_prompts::Equal(command,"ACTION_ENTER"))return nullptr;
+    if(!pc_prompts::modernControls)return nullptr;
+    const auto address=reinterpret_cast<ULONG_PTR>(output);
+    //552CF0 resolves the selected record's inline localization key at +58,
+    // then formats its body into this separate 2048-byte phone-reader buffer.
+    // Keep ordinary object-use prompts and other phone messages unchanged.
+    constexpr ULONG_PTR messageBegin=0xff4ce4,messageEnd=messageBegin+0x800;
+    if(pc_prompts::Equal(command,"LEFT_OBJECT_USE")&&address>=messageBegin&&address<messageEnd&&remaining&&remaining<=messageEnd-address){
+        __try{
+            const auto* record=*reinterpret_cast<const BYTE* const*>(0xff4c74);
+            if(record)return pc_prompts::PhoneMessageLabel(command,*reinterpret_cast<const unsigned long long*>(record+0x58),true);
+        }__except(EXCEPTION_EXECUTE_HANDLER){return nullptr;}
+    }
+    if(!pc_prompts::Equal(command,"ACTION_ENTER"))return nullptr;
     //54D750 passes its own512-byte manager+42 output buffer to54A8A0.
     // Do not relabel another interaction merely because this tip is visible.
-    const auto address=reinterpret_cast<ULONG_PTR>(output);
     constexpr ULONG_PTR begin=0xff4528+0x42,end=begin+0x200;
     if(address<begin||address>=end||!remaining||remaining>end-address)return nullptr;
     __try{
@@ -420,7 +431,11 @@ static void InstallConfiguredNativeHooks(){
         cloth_rigidity_rate::Install();
         favorites_native::Install();
         menu_context::Install();
-        if(chapter_preview_probe::enabled||chapter_preview_probe::consumer)Log("Chapter preview observer install=%d",chapter_preview_probe::Install());
+        if(chapter_preview_probe::enabled||chapter_preview_probe::consumer){
+            const LONG result=chapter_preview_probe::Install()?1:0;
+            static volatile LONG reported=-1;
+            if(InterlockedExchange(&reported,result)!=result)Log("Chapter preview observer install=%ld",result);
+        }
         InstallStereoSpatialAudio(stereoSpatialAudioEnabled);
         InstallCinematicAudioOutputSilence(cinematic_ff::enabled);InstallInventorySafety();
 }

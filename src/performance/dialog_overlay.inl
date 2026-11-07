@@ -25,6 +25,11 @@ static void Draw(IDirect3DDevice9* device,const RECT* source,const RECT* destina
         }
         DialogStateV1 state{};
         if(!source&&!destination&&getter&&sender&&setReady&&getter(&state,sizeof(state))&&state.size==sizeof(state)&&state.version==1&&(state.flags&DialogReady)&&now-state.tick<=250){
+            // The supported Choice contract is first=No/result2. Resume only
+            // after the UI thread executed No for our pending menu confirmation,
+            // never just because a second input was accepted into a queue.
+            if((state.flags&DialogChoice)&&state.mode==3&&state.firstResult==2&&state.secondResult==1)
+                menu_overlay::ObserveConfirmation(state.generation,state.action,state.pendingResult,(state.flags&DialogClosing)!=0);
             if(!presentation)presentation=new dialog_presentation::Presentation;
             ready=presentation->Draw(device,state,SendAction,menu_overlay::DrawBackdrop);
         }else if(presentation)presentation->ReleaseDeviceResources();

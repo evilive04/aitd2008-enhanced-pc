@@ -33,7 +33,7 @@ namespace EnhancedSetup {
             if(String.IsNullOrEmpty(name)||name.IndexOf('\\')>=0||Path.IsPathRooted(name))return false;
             var parts=name.Split('/');
             if(parts.Any(p=>p.Length==0||p=="."||p==".."||p.EndsWith(".",StringComparison.Ordinal)||p.EndsWith(" ",StringComparison.Ordinal)||p.IndexOfAny(Path.GetInvalidFileNameChars())>=0||Regex.IsMatch(p,@"\A(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|\z)",RegexOptions.IgnoreCase)))return false;
-            if(!directory&&parts.Length==1)return Roots.Contains(name);
+            if(!directory&&parts.Length==1)return Roots.Contains(name)||String.Equals(name,"AITD Runtime.exe",StringComparison.OrdinalIgnoreCase)||String.Equals(name,"AITD Video Worker.exe",StringComparison.OrdinalIgnoreCase);
             if(!Folders.Contains(parts[0])||(!directory&&parts.Length<2))return false;
             return directory||!ForbiddenExtensions.Contains(Path.GetExtension(name));
         }
@@ -88,7 +88,7 @@ namespace EnhancedSetup {
             return result;
         }
         public static void RequireClosedGame() {
-            foreach(string name in new[]{"Alone","AITDRuntime","AITD Enhanced Launcher","Spustit hru","Setup"}) {
+            foreach(string name in new[]{"Alone","AITDRuntime","AITD Runtime","AITD Enhanced Launcher","Spustit hru","Setup"}) {
                 var processes=Process.GetProcessesByName(name);
                 try { if(processes.Length!=0)throw new IOException("Close the game, launcher and Setup before uninstalling."); }
                 finally { foreach(var process in processes)process.Dispose(); }

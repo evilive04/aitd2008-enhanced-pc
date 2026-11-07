@@ -35,6 +35,15 @@ static bool BorderlessPrepare(D3DPRESENT_PARAMETERS* parameters,HWND fallback,Bo
     const HWND window=parameters->hDeviceWindow?parameters->hDeviceWindow:fallback;
     DWORD process=0;GetWindowThreadProcessId(window,&process);
     if(!window || process!=GetCurrentProcessId() || !IsWindow(window))return false;
+    // The supported game first creates a hidden "D3D Tester" device to
+    // validate its display mode. Changing that probe to windowed makes the
+    // native test reject the mode and restore 1280x720. Apply our layout only
+    // to the authenticated game's actual engine window, including its Resets.
+    wchar_t windowClass[64]{};
+    if(GetClassNameW(window,windowClass,64)<=0||wcscmp(windowClass,L"Eden Games")) {
+        Log("Borderless skipped non-engine window hwnd=%p class=%ls; native display test retained",window,windowClass);
+        return false;
+    }
     BorderlessDpiScope dpi;
     MONITORINFO monitor{};monitor.cbSize=sizeof(monitor);
     if(!GetMonitorInfoW(MonitorFromWindow(window,MONITOR_DEFAULTTONEAREST),&monitor) || !GetWindowRect(window,&change.rectangle))return false;

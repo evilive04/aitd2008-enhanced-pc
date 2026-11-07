@@ -17,6 +17,7 @@ from decode_bank import decode
 from inspect_fat import read_index
 from extract_runtime_ui import STOCK_EXE_SHA256,file_sha,plain_path
 from semantic_ui_codec import build_movie,sha
+from extract_menu_credits import extract as extract_credits
 
 
 TARGETS={'chapters':('a',361,10),'general':('a',367,22),
@@ -99,8 +100,13 @@ def generate(game,output):
     originals,proof=read_original_movies(game,recipes)
     # Authenticate and construct every payload before creating any output.
     generated={name:build_movie(originals[name],recipe) for name,recipe in recipes.items()}
+    original_credits,credits_proof=extract_credits(originals['chapters'])
+    credits=original_credits.rstrip()+'\n\n\nENHANCED EDITION\n\nMOD CREATOR\nAmensalt\n'
     output.mkdir()
     try:
+        media=output/'enhanced-ui'
+        media.mkdir()
+        (media/'credits.txt').write_text(credits,encoding='utf-8',newline='\n')
         pack=output/'mods'/PACK_ID
         (pack/'ui').mkdir(parents=True)
         entries=[]
@@ -116,6 +122,9 @@ def generate(game,output):
         with (pack/'mod.json').open('x',encoding='utf-8',newline='\n') as stream:
             json.dump(manifest,stream,indent=2);stream.write('\n')
         proof.update({'version':1,'kind':'locally-generated-native-ui-movies',
+            'menu_credits':{'source_sha256':credits_proof['source_sha256'],
+                'placed_text_tag_count':credits_proof['placed_text_tag_count'],
+                'sha256':sha(credits.encode('utf-8')),'redistributable':False},
             'redistributable':False,'generated_resources':entries,
             'coverage':'Eight VMF movies only. Native texture recipes are generated separately.',
             'recipe_sha256':{name:file_sha(recipe_root/(name+'.json')) for name in recipes},

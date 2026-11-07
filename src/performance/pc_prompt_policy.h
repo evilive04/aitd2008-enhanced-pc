@@ -11,6 +11,11 @@ inline const char* TutorialLabel(const char* command,unsigned long long message,
     // template uses ACTION_ENTER; ordinary interactions must still show F.
     return modernControls&&message==0xeeebe447c0ae3c4eULL&&Equal(command,"ACTION_ENTER")?"Q":nullptr;
 }
+inline const char* PhoneMessageLabel(const char* command,unsigned long long message,bool modernControls){
+    // The original localized Flashlight Tips body uses LEFT_OBJECT_USE.
+    // Its localization identity remains stable across language and equipment.
+    return modernControls&&message==0x02156f188da7dbf9ULL&&Equal(command,"LEFT_OBJECT_USE")?"Q":nullptr;
+}
 inline const char* FixedLabel(const char* command,bool modernControls) {
     if(modernControls&&(Equal(command,"ACTION_ENTER")||Equal(command,"ACTION_LEAVE")))return "F";
     if(modernControls&&(Equal(command,"VCL_LEAVE")||Equal(command,"VCL_EJECT")))return "Hold F";

@@ -30,7 +30,12 @@ struct Presentation{
    ui_art::Scene next;if(FAILED(main_popup_art::Build(s,selected,next)))return false;art=std::move(next);cached=s;builtSelected=selected;
   }
   auto frame=art;ui_pointer::AppendHiddenCursor(frame,mouse,x,y);if(!ui_art::Draw(d,frame,assets,canvas.scale,canvas.x,canvas.y))return false;
-  if(action<=1&&sender(action,s.generation))ui_sound::Emit(action?ui_sound::Cue::Confirm:ui_sound::Cue::Back);
+  const bool prepared=action==1&&s.type==static_cast<DWORD>(MainPopupKind::Choice)&&menu_overlay::PrepareForLoad();
+  if(action<=1){
+   const bool queued=sender(action,s.generation)!=FALSE;
+   if((!queued&&prepared)||(queued&&action==0))menu_overlay::CancelPreparedLoad();
+   if(queued)ui_sound::Emit(action?ui_sound::Cue::Confirm:ui_sound::Cue::Back);
+  }
   return true;
  }
 };

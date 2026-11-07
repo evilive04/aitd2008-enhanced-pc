@@ -3,7 +3,7 @@
 // scripts299/300/301/305/315/316/317; native scripts retain every side effect.
 #include "main_popup_state.h"
 namespace main_popup_context {
-static bool enabled=false,ready=false,closing=false;static SRWLOCK lock=SRWLOCK_INIT;
+static bool enabled=false,ready=false,closing=false,dispatching=false;static SRWLOCK lock=SRWLOCK_INIT;
 static MainPopupStateV1 state{};static DWORD generation{},readyGeneration{},readyTick{},closingTick{},queued=~0u,queuedGeneration{};
 struct Owner{DWORD movie{},handle{},root{},popup{},bind{},type{};};static Owner previous{};
 static DWORD Word(const void* p,unsigned at=0){return phone_context::Word(p,at);}
@@ -55,11 +55,11 @@ static bool Dispatch(unsigned char* movie,DWORD type,DWORD choice){
  options_context::NativeInteger(handle,"/:lockbt_pop",1);options_context::NativeInteger(handle,"/:release_button",1);
  return menu_context::Timeline(movie,"/options/pop_up/bind",type==2?"end":"end_conflict");
 }
-static BOOL GetState(void* out,DWORD bytes){if(!out||bytes!=sizeof state)return FALSE;MainPopupStateV1 copy{};AcquireSRWLockShared(&lock);copy=state;ReleaseSRWLockShared(&lock);if(GetTickCount()-copy.tick>250)return FALSE;__try{memcpy(out,&copy,sizeof copy);}__except(EXCEPTION_EXECUTE_HANDLER){return FALSE;}return TRUE;}
+static BOOL GetState(void* out,DWORD bytes){if(!out||bytes!=sizeof state)return FALSE;MainPopupStateV1 copy{};AcquireSRWLockShared(&lock);copy=state;if(dispatching||queued!=~0u)copy.flags|=MainPopupBusy;ReleaseSRWLockShared(&lock);if(GetTickCount()-copy.tick>250)return FALSE;__try{memcpy(out,&copy,sizeof copy);}__except(EXCEPTION_EXECUTE_HANDLER){return FALSE;}return TRUE;}
 static void SetReady(BOOL value,DWORD epoch){AcquireSRWLockExclusive(&lock);if(value&&enabled&&(state.flags&MainPopupVisible)&&state.generation==epoch&&GetTickCount()-state.tick<=250){ready=true;readyGeneration=epoch;readyTick=GetTickCount();}else if(readyGeneration==epoch)ready=false;ReleaseSRWLockExclusive(&lock);}
 static BOOL Queue(DWORD choice,DWORD epoch){
  if(choice>1||!phone_context::Foreground())return FALSE;AcquireSRWLockExclusive(&lock);const auto now=GetTickCount();
- const bool accept=enabled&&ready&&(state.flags&MainPopupVisible)&&!(state.flags&MainPopupBusy)&&(state.type!=1||choice==1)&&state.generation==epoch&&readyGeneration==epoch&&now-state.tick<=250&&now-readyTick<=250&&queued==~0u;
+ const bool accept=enabled&&ready&&!dispatching&&(state.flags&MainPopupVisible)&&!(state.flags&MainPopupBusy)&&(state.type!=1||choice==1)&&state.generation==epoch&&readyGeneration==epoch&&now-state.tick<=250&&now-readyTick<=250&&queued==~0u;
  if(accept){queued=choice;queuedGeneration=epoch;}ReleaseSRWLockExclusive(&lock);return accept?TRUE:FALSE;
 }
 static bool OwnsPaint(std::uintptr_t root)noexcept{AcquireSRWLockShared(&lock);const bool yes=ui_paint_owner::Visual(root,previous.root,enabled,(state.flags&MainPopupVisible)!=0,ready,state.generation,readyGeneration,state.tick,readyTick,GetTickCount());ReleaseSRWLockShared(&lock);return yes;}
@@ -72,11 +72,11 @@ static bool ConsumesInput(){
 static void Tick(){
  MainPopupStateV1 next{};Owner owner{};Capture(next,owner);AcquireSRWLockExclusive(&lock);if(memcmp(&owner,&previous,sizeof owner)){previous=owner;++generation;ready=false;}
  const auto choice=queued;queued=~0u;const bool allowed=choice<=1&&(next.flags&MainPopupVisible)&&!(next.flags&MainPopupBusy)&&ready&&queuedGeneration==generation&&readyGeneration==generation&&GetTickCount()-readyTick<=250;const auto sentBefore=state.dispatches,rejectedBefore=state.rejected;
- if(choice<=1){ready=false;closing=true;closingTick=GetTickCount();}ReleaseSRWLockExclusive(&lock);
+ if(choice<=1){dispatching=true;ready=false;closing=true;closingTick=GetTickCount();}ReleaseSRWLockExclusive(&lock);
  bool sent=false;if(allowed&&phone_context::Foreground()){__try{sent=Dispatch(reinterpret_cast<unsigned char*>(owner.movie),next.type,choice);}__except(EXCEPTION_EXECUTE_HANDLER){sent=false;}}
  if(choice<=1){Capture(next,owner);AcquireSRWLockExclusive(&lock);if(memcmp(&owner,&previous,sizeof owner)){previous=owner;++generation;}ReleaseSRWLockExclusive(&lock);}
- next.tick=GetTickCount();next.generation=generation;next.dispatches=sentBefore+(sent?1:0);next.rejected=rejectedBefore+(choice<=1&&!sent?1:0);AcquireSRWLockExclusive(&lock);state=next;if(!(state.flags&MainPopupVisible))ready=false;ReleaseSRWLockExclusive(&lock);
+ next.tick=GetTickCount();next.generation=generation;next.dispatches=sentBefore+(sent?1:0);next.rejected=rejectedBefore+(choice<=1&&!sent?1:0);AcquireSRWLockExclusive(&lock);state=next;dispatching=false;if(!(state.flags&MainPopupVisible))ready=false;ReleaseSRWLockExclusive(&lock);
 }
-static void Configure(bool value){AcquireSRWLockExclusive(&lock);enabled=value;if(!value){state={};previous={};ready=closing=false;queued=~0u;++generation;}ReleaseSRWLockExclusive(&lock);}
+static void Configure(bool value){AcquireSRWLockExclusive(&lock);enabled=value;if(!value){state={};previous={};ready=closing=dispatching=false;queued=~0u;++generation;}ReleaseSRWLockExclusive(&lock);}
 }
 

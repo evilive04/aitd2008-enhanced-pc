@@ -8,12 +8,12 @@ provided.
 
 ## Platform and local preparation dependencies
 
-Windows, DirectX, Windows fonts, .NET Framework and the Windows SDK are external
-dependencies. Their files are not redistributed. Own HLSL and compiled project
+Windows, DirectX, Media Foundation, .NET Framework and the Windows SDK are external
+dependencies. Windows system DLLs and font files are not redistributed. Own HLSL and compiled project
 shader headers are included; original game shader bytecode is excluded. The
 original `ShaderCache/Offline.sha` remains a local game prerequisite, not a
-Release file. The keycap recipe checks the supported local Segoe UI Bold version
-and does not bundle font files.
+Release file. The keycap recipe uses the included OFL artwork template and
+requires no particular system-font edition; no font files are bundled.
 
 Pillow 13.0.0 and NumPy 2.5.4 are installed separately for local asset generation;
 they are not relicensed under this project's MIT grant. Pillow's own license

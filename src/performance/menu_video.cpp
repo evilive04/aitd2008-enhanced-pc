@@ -1,4 +1,5 @@
 #include "menu_video.h"
+#include "menu_video_ipc.h"
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
@@ -137,96 +138,5 @@ HRESULT Decoder::Read(Frame& frame,bool& end){
     return MF_E_INVALID_STREAM_DATA;
 }
 DWORD Decoder::Stage()const noexcept{return impl_->stage;}
-struct Player::Impl{
-    std::thread worker;std::mutex lock;std::condition_variable wake;
-    bool stop{},active{true};Frame latest;std::atomic<HRESULT> error{S_OK};
-    mutable SRWLOCK diagnosticsLock=SRWLOCK_INIT;Diagnostic diagnostic{};
-    void Stage(DWORD value,std::uint64_t requested=0)noexcept{
-        AcquireSRWLockExclusive(&diagnosticsLock);if(SUCCEEDED(diagnostic.error)){diagnostic.stage=value;if(requested)diagnostic.requestedBytes=requested;}ReleaseSRWLockExclusive(&diagnosticsLock);
-    }
-    void Failure(HRESULT hr,DWORD kind,DWORD code,const char* what)noexcept{
-        AcquireSRWLockExclusive(&diagnosticsLock);
-        if(SUCCEEDED(diagnostic.error)){
-            diagnostic.error=hr;diagnostic.exceptionKind=kind;diagnostic.exceptionCode=code;diagnostic.thread=GetCurrentThreadId();if(what)strncpy_s(diagnostic.detail,what,_TRUNCATE);
-            MEMORY_BASIC_INFORMATION info{};ULONG_PTR address=0;
-            while(VirtualQuery(reinterpret_cast<void*>(address),&info,sizeof(info))){
-                if(info.State==MEM_FREE){diagnostic.freeAtFailure+=info.RegionSize;if(info.RegionSize>diagnostic.largestFreeAtFailure)diagnostic.largestFreeAtFailure=info.RegionSize;}
-                const auto next=reinterpret_cast<ULONG_PTR>(info.BaseAddress)+info.RegionSize;if(next<=address)break;address=next;
-            }
-        }
-        ReleaseSRWLockExclusive(&diagnosticsLock);error=hr;
-    }
-    void Run(const std::wstring& path)noexcept{
-        const HRESULT com=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
-        if(FAILED(com)){Stage(1);Failure(com,0,0,"CoInitializeEx");return;}
-        try{
-            Stage(2);Decoder decoder;HRESULT hr=decoder.Open(path.c_str());if(FAILED(hr)){Stage(decoder.Stage());Failure(hr,0,0,"Decoder::Open");}
-            auto origin=std::chrono::steady_clock::now();
-            std::uint64_t serial=0,loop=0;bool hasFrame=false;
-            std::int64_t loopEnd=0,firstTime=0;
-            Frame frame;
-            while(SUCCEEDED(hr)){
-                Stage(3);{std::unique_lock<std::mutex> guard(lock);if(stop)break;if(!active){
-                    const auto paused=std::chrono::steady_clock::now();wake.wait(guard,[this]{return stop||active;});
-                    if(stop)break;origin+=std::chrono::steady_clock::now()-paused;
-                }}
-                Stage(4);bool end=false;hr=decoder.Read(frame,end);if(FAILED(hr)){Stage(decoder.Stage());Failure(hr,0,0,"Decoder::Read");break;}
-                if(!end){AcquireSRWLockExclusive(&diagnosticsLock);++diagnostic.decoded;diagnostic.requestedBytes=frame.pixels.size();ReleaseSRWLockExclusive(&diagnosticsLock);}
-                if(end){
-                    if(!hasFrame){hr=MF_E_INVALID_STREAM_DATA;break;}
-                    origin+=std::chrono::nanoseconds(loopEnd*100);
-                    ++loop;hasFrame=false;loopEnd=0;Stage(5);hr=decoder.Rewind();continue;
-                }
-                if(!hasFrame){firstTime=frame.timestamp100ns;hasFrame=true;}
-                const auto relative=frame.timestamp100ns-firstTime;
-                if(relative<0||frame.duration100ns<=0||relative>36000000000ll){hr=MF_E_INVALID_STREAM_DATA;break;}
-                loopEnd=relative+frame.duration100ns;
-                Stage(6);const auto due=origin+std::chrono::nanoseconds(relative*100);
-                std::unique_lock<std::mutex> guard(lock);
-                Stage(7);
-                if(wake.wait_until(guard,due,[this]{return stop;}))break;
-                Stage(8);
-                frame.serial=++serial;frame.loop=loop;std::swap(latest,frame);
-                AcquireSRWLockExclusive(&diagnosticsLock);++diagnostic.published;ReleaseSRWLockExclusive(&diagnosticsLock);
-            }
-            if(FAILED(hr))Failure(hr,0,0,"worker HRESULT");
-        }catch(const std::bad_alloc& e){Failure(E_OUTOFMEMORY,1,0,e.what());}
-        catch(const std::system_error& e){Failure(E_UNEXPECTED,2,static_cast<DWORD>(e.code().value()),e.what());}
-        catch(const std::exception& e){Failure(E_UNEXPECTED,3,0,e.what());}
-        catch(...){Failure(E_UNEXPECTED,4,0,"unknown C++ exception");}
-        CoUninitialize();
-    }
-};
-Player::Player():impl_(new Impl){}
-Player::~Player(){Stop();}
-bool Player::Start(const wchar_t* path){
-    if(!path||!*path)return false;
-    Stop();impl_->error=S_OK;AcquireSRWLockExclusive(&impl_->diagnosticsLock);impl_->diagnostic={};ReleaseSRWLockExclusive(&impl_->diagnosticsLock);
-    {std::lock_guard<std::mutex> guard(impl_->lock);impl_->stop=false;impl_->active=true;impl_->latest={};}
-    try{impl_->worker=std::thread([this,p=std::wstring(path)]{impl_->Run(p);});}
-    catch(const std::bad_alloc& e){impl_->Stage(40);impl_->Failure(E_OUTOFMEMORY,1,0,e.what());return false;}
-    catch(const std::system_error& e){impl_->Stage(40);impl_->Failure(E_UNEXPECTED,2,static_cast<DWORD>(e.code().value()),e.what());return false;}
-    catch(...){impl_->Stage(40);impl_->Failure(E_UNEXPECTED,4,0,"thread startup exception");return false;}
-    return true;
+#include "menu_video_client.inl"
 }
-void Player::Stop(){
-    {std::lock_guard<std::mutex> guard(impl_->lock);impl_->stop=true;}
-    impl_->wake.notify_all();if(impl_->worker.joinable())impl_->worker.join();
-    {std::lock_guard<std::mutex> guard(impl_->lock);impl_->latest={};}
-}
-void Player::SetActive(bool active)noexcept{
-    {std::lock_guard<std::mutex> guard(impl_->lock);impl_->active=active;}impl_->wake.notify_all();
-}
-bool Player::CopyLatest(Frame& output){
-    std::lock_guard<std::mutex> guard(impl_->lock);
-    if(!impl_->latest.serial||output.serial==impl_->latest.serial)return false;
-    try{output=impl_->latest;}
-    catch(const std::bad_alloc& e){impl_->Stage(41,impl_->latest.pixels.size());impl_->Failure(E_OUTOFMEMORY,1,0,e.what());return false;}
-    catch(const std::exception& e){impl_->Stage(41);impl_->Failure(E_UNEXPECTED,3,0,e.what());return false;}
-    catch(...){impl_->Stage(41);impl_->Failure(E_UNEXPECTED,4,0,"frame copy exception");return false;}
-    AcquireSRWLockExclusive(&impl_->diagnosticsLock);++impl_->diagnostic.copied;ReleaseSRWLockExclusive(&impl_->diagnosticsLock);return true;
-}
-HRESULT Player::Error()const{return impl_->error.load();}
-Diagnostic Player::Diagnostics()const noexcept{AcquireSRWLockShared(&impl_->diagnosticsLock);const auto result=impl_->diagnostic;ReleaseSRWLockShared(&impl_->diagnosticsLock);return result;}
-}
-

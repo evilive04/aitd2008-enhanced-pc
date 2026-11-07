@@ -3,6 +3,8 @@ setlocal
 where cl >nul 2>nul
 if errorlevel 1 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x86
 if errorlevel 1 exit /b 1
+call "%~dp0build-video-worker.cmd"
+if errorlevel 1 exit /b 1
 pushd "%~dp0.."
 if not exist build\performance mkdir build\performance
 pushd build\performance
